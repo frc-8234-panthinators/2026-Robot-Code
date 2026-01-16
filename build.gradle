@@ -1,11 +1,30 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.1.1"
+    id "com.diffplug.spotless" version "8.1.0"
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+spotless {
+    // Only enforce on changed files from main branch
+    ratchetFrom "origin/main"
+
+    format "misc", {
+        // General files to clean up
+        target "*.gradle", ".gitattributes", ".gitignore"
+
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+
+    java {
+        palantirJavaFormat()
+    }
 }
 
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
