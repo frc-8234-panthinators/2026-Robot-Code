@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -82,5 +83,17 @@ public class SwerveSubsystem extends SubsystemBase {
                     true,
                     false);
         });
+    }
+
+    public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
+        swerveDrive.drive(
+                translation,
+                rotation,
+                fieldRelative,
+                false); // Open loop is disabled since it shouldn't be used most of the time.
+    }
+
+    public Pose2d getSimulationDriveTrainPose() {
+        return swerveDrive.getSimulationDriveTrainPose().get();
     }
 }
