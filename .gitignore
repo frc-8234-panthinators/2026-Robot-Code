@@ -188,3 +188,6 @@ compile_commands.json
 
 # Each user should have their own settings
 gradle.properties
+
+# Required for Version Control for AdvantageKit
+src/main/java/frc/robot/BuildConstants.java
