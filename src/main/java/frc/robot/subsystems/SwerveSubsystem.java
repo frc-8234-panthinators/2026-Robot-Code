@@ -71,29 +71,29 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param angularRotationX Rotation of the robot to set
      * @return Drive command.
      */
-    public Command driveCommand(
-            DoubleSupplier translationX, DoubleSupplier translationY, DoubleSupplier angularRotationX) {
-        return run(() -> {
-            // Make the robot move
-            swerveDrive.drive(
-                    new Translation2d(
-                            translationX.getAsDouble() * swerveDrive.getMaximumChassisVelocity(),
-                            translationY.getAsDouble() * swerveDrive.getMaximumChassisVelocity()),
-                    angularRotationX.getAsDouble() * swerveDrive.getMaximumChassisAngularVelocity(),
-                    true,
-                    false);
-        });
+    public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
+        swerveDrive.drive(
+                new Translation2d(
+                        translationX * swerveDrive.getMaximumChassisVelocity(),
+                        translationY * swerveDrive.getMaximumChassisVelocity()),
+                rotation * swerveDrive.getMaximumChassisAngularVelocity(),
+                fieldRelative,
+                false);
     }
 
-    public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
+    /*public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
         swerveDrive.drive(
                 translation,
                 rotation,
                 fieldRelative,
                 false); // Open loop is disabled since it shouldn't be used most of the time.
-    }
+    }*/
 
     public Pose2d getSimulationDriveTrainPose() {
         return swerveDrive.getSimulationDriveTrainPose().get();
+    }
+
+    public void resetOdometry(Pose2d pose) {
+        swerveDrive.resetOdometry(pose);
     }
 }
