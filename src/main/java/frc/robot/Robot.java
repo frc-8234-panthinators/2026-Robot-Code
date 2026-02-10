@@ -10,11 +10,17 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
+
 import java.io.IOException;
+import java.util.Optional;
+
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -24,6 +30,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
     private SwerveSubsystem swerve;
     private XBoxContainer xbox = new XBoxContainer();
+    private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
 
     private final RobotContainer m_robotContainer;
@@ -75,6 +82,21 @@ public class Robot extends LoggedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+
+        Optional<EstimatedRobotPose> poseGeoffery = vision.getEstimatedMainCamPose();
+        if (poseGeoffery.isPresent()) {
+            EstimatedRobotPose poseReal = poseGeoffery.get();
+            double lowestAmbiguity = 1;
+        
+            for (PhotonTrackedTarget target : poseReal.targetsUsed) {
+                if (target.getPoseAmbiguity() < lowestAmbiguity) {
+                    lowestAmbiguity = target.getPoseAmbiguity();
+                }
+            }
+            if (lowestAmbiguity <= 0.1) {
+                swerve.addVisionMeasurement(poseReal.estimatedPose.toPose2d(), poseReal.timestampSeconds);
+            }
+        }
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -136,5 +158,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationPeriodic() {
         Logger.recordOutput("RobotPose", swerve.getSimulationDriveTrainPose());
+        vision.updateVisionSim(swerve.getPose());
+        Logger.recordOutput("VisionPose", vision.getEstimatedMainCamPose().toString());
     }
 }

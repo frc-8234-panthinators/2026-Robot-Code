@@ -93,6 +93,14 @@ public class SwerveSubsystem extends SubsystemBase {
         return swerveDrive.getSimulationDriveTrainPose().get();
     }
 
+    public Pose2d getPose() {
+        return swerveDrive.getPose();
+    }
+
+    public void addVisionMeasurement(Pose2d pose, double timestamp) {
+        swerveDrive.addVisionMeasurement(pose, timestamp);
+    }
+
     public void resetOdometry(Pose2d pose) {
         swerveDrive.resetOdometry(pose);
     }
