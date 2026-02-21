@@ -1,15 +1,5 @@
 package frc.robot.subsystems;
 
-import java.util.Optional;
-
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.SimCameraProperties;
-import org.photonvision.simulation.VisionSystemSim;
-
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,6 +11,14 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import java.util.Optional;
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.simulation.VisionSystemSim;
 
 public class VisionSubsystem extends SubsystemBase {
     PhotonCamera mainCam;
@@ -28,24 +26,19 @@ public class VisionSubsystem extends SubsystemBase {
 
     PhotonCameraSim mainCamSim;
     VisionSystemSim visionSim;
-    
+
     AprilTagFieldLayout tags;
 
     public VisionSubsystem() {
         mainCam = new PhotonCamera("mainCam");
         tags = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
-        mainCamEstimator = new PhotonPoseEstimator(tags, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new Transform3d(
-            new Translation3d(
-                Units.inchesToMeters(0),
-                Units.inchesToMeters(0),
-                Units.inchesToMeters(0)
-            ),
-            new Rotation3d(
-                Units.degreesToRadians(0),
-                Units.degreesToRadians(0),
-                Units.degreesToRadians(0)
-            )
-        ));
+        mainCamEstimator = new PhotonPoseEstimator(
+                tags,
+                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+                new Transform3d(
+                        new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(0), Units.inchesToMeters(0)),
+                        new Rotation3d(
+                                Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(0))));
 
         if (Robot.isSimulation()) {
             visionSim = new VisionSystemSim("main");
@@ -58,18 +51,13 @@ public class VisionSubsystem extends SubsystemBase {
             cameraProp.setLatencyStdDevMs(15);
 
             mainCamSim = new PhotonCameraSim(mainCam, cameraProp);
-            visionSim.addCamera(mainCamSim,  new Transform3d(
-                new Translation3d(
-                    Units.inchesToMeters(0),
-                    Units.inchesToMeters(0),
-                    Units.inchesToMeters(0)
-                ),
-                new Rotation3d(
-                    Units.degreesToRadians(0),
-                    Units.degreesToRadians(0),
-                    Units.degreesToRadians(0)
-                )
-            ));
+            visionSim.addCamera(
+                    mainCamSim,
+                    new Transform3d(
+                            new Translation3d(
+                                    Units.inchesToMeters(0), Units.inchesToMeters(0), Units.inchesToMeters(0)),
+                            new Rotation3d(
+                                    Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(0))));
             mainCamSim.enableRawStream(true);
             mainCamSim.enableProcessedStream(true);
             mainCamSim.enableDrawWireframe(true);
@@ -87,14 +75,15 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         if (Robot.isSimulation()) {
-            mainCamEstimator.update(result).ifPresentOrElse(
-                est ->
-                    getSimDebugField()
-                        .getObject("VisionEstimation")
-                        .setPose(est.estimatedPose.toPose2d()),
-                () -> {
-                    getSimDebugField().getObject("VisionEstimation").setPoses();
-                });
+            mainCamEstimator
+                    .update(result)
+                    .ifPresentOrElse(
+                            est -> getSimDebugField()
+                                    .getObject("VisionEstimation")
+                                    .setPose(est.estimatedPose.toPose2d()),
+                            () -> {
+                                getSimDebugField().getObject("VisionEstimation").setPoses();
+                            });
         }
 
         return mainCamEstimator.update(result);

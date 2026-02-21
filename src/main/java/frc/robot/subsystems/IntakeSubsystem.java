@@ -10,9 +10,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class ShooterSubsystem extends SubsystemBase {
-    private static final int INDEXER_CAN_ID = 21;
-    private static final int SHOOTER_CAN_ID = 22;
+public class IntakeSubsystem extends SubsystemBase {
+    private static final int KRAKEN_MOTOR_CAN_ID = 20; // TODO: Change to correct port :)
 
     private static final double kP = 0.5;
     private static final double kI = 0.0;
@@ -22,12 +21,10 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double MAX_VELOCITY = 30;
     private static final double MAX_ACCELERATION = 40;
 
-    private final TalonFX indexerMotor;
-    private final TalonFX shooterMotor;
+    private final TalonFX krakenMotor;
 
-    public ShooterSubsystem() {
-        indexerMotor = new TalonFX(INDEXER_CAN_ID);
-        shooterMotor = new TalonFX(SHOOTER_CAN_ID);
+    public IntakeSubsystem() {
+        krakenMotor = new TalonFX(KRAKEN_MOTOR_CAN_ID);
 
         TalonFXConfiguration config = new TalonFXConfiguration();
 
@@ -44,37 +41,26 @@ public class ShooterSubsystem extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimit = 40;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        indexerMotor.getConfigurator().apply(config);
-        shooterMotor.getConfigurator().apply(config);
+        krakenMotor.getConfigurator().apply(config);
     }
 
-    public void spinIndexer() {
-        indexerMotor.set(0.4);
+    public void intake() {
+        krakenMotor.set(0.4);
     }
 
-    public void stopIndexer() {
-        indexerMotor.set(0);
+    public void stop() {
+        krakenMotor.set(0);
     }
 
-    public void spinShooter() {
-        shooterMotor.set(0.4);
-    }
-
-    public void stopShooter() {
-        shooterMotor.set(0);
-    }
-
-    public Command shooterCommand() {
+    public Command intakeCommand() {
         return run(() -> {
-            spinIndexer();
-            spinShooter();
+            intake();
         });
     }
 
     public Command stopCommand() {
         return run(() -> {
-            stopIndexer();
-            stopShooter();
+            stop();
         });
     }
 }

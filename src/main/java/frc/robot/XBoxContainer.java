@@ -1,9 +1,14 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 public class XBoxContainer {
     private XboxController controller = new XboxController(0);
+
+    public JoystickButton runIntake = new JoystickButton(controller, XboxController.Button.kY.value);
+    public JoystickButton runShooter = new JoystickButton(controller, XboxController.Button.kB.value);
+    public JoystickButton stop = new JoystickButton(controller, XboxController.Button.kA.value);
 
     public boolean getControllerXButton() {
         return (controller.getLeftStickButton());

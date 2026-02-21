@@ -11,10 +11,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-
 import java.io.IOException;
 import java.util.Optional;
-
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -87,7 +85,7 @@ public class Robot extends LoggedRobot {
         if (poseGeoffery.isPresent()) {
             EstimatedRobotPose poseReal = poseGeoffery.get();
             double lowestAmbiguity = 1;
-        
+
             for (PhotonTrackedTarget target : poseReal.targetsUsed) {
                 if (target.getPoseAmbiguity() < lowestAmbiguity) {
                     lowestAmbiguity = target.getPoseAmbiguity();
