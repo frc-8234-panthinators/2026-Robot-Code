@@ -111,13 +111,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return Drive command.
      */
     public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
-        swerveDrive.drive(
-                new Translation2d(
-                        translationX * swerveDrive.getMaximumChassisVelocity(),
-                        translationY * swerveDrive.getMaximumChassisVelocity()),
-                rotation * swerveDrive.getMaximumChassisAngularVelocity(),
-                fieldRelative,
-                false);
+        swerveDrive.drive(new Translation2d(translationX, translationY), rotation, fieldRelative, false);
     }
 
     /*public void drive(Translation2d translation, double rotation, boolean fieldRelative) {

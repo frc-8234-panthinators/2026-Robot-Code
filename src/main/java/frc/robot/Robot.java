@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.reduxrobotics.canand.CanandEventLoop;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -64,6 +65,7 @@ public class Robot extends LoggedRobot {
         } catch (IOException name) {
             throw new RuntimeException(name);
         }
+        CanandEventLoop.getInstance();
     }
 
     /**
