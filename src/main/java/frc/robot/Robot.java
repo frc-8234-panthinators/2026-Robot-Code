@@ -135,7 +135,7 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        swerve.drive(xbox.driveY(), xbox.driveX(), xbox.rotate(), true);
+        swerve.drive(-xbox.driveY(), xbox.driveX(), -xbox.rotate(), true);
     }
 
     @Override

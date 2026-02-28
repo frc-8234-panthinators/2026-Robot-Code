@@ -1,17 +1,17 @@
 {
   "drive": {
     "type": "krakenx60",
-    "id": 1,
+    "id": 10,
     "canbus": null
   },
   "angle": {
     "type": "krakenx44",
-    "id": 2,
+    "id": 11,
     "canbus": null
   },
   "encoder": {
     "type": "canandmag_can",
-    "id": 3,
+    "id": 12,
     "canbus": null
   },
   "inverted": {
