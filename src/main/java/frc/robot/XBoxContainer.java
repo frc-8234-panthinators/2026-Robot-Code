@@ -9,6 +9,7 @@ public class XBoxContainer {
     public JoystickButton runIntake = new JoystickButton(controller, XboxController.Button.kY.value);
     public JoystickButton runShooter = new JoystickButton(controller, XboxController.Button.kB.value);
     public JoystickButton stop = new JoystickButton(controller, XboxController.Button.kA.value);
+    public JoystickButton reset = new JoystickButton(controller, XboxController.Button.kX.value); 
 
     public boolean getControllerXButton() {
         return (controller.getLeftStickButton());

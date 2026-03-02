@@ -6,12 +6,15 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.SwerveSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -22,6 +25,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final XBoxContainer xbox;
+    private final SwerveSubsystem swerve;
     private final IntakeSubsystem intake;
     private final ShooterSubsystem shooter;
 
@@ -34,7 +38,9 @@ public class RobotContainer {
         xbox = new XBoxContainer();
         intake = new IntakeSubsystem();
         shooter = new ShooterSubsystem();
+        swerve = new SwerveSubsystem();
 
+        NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
         NamedCommands.registerCommand("Intake", intake.intakeCommand());
         NamedCommands.registerCommand("StopIntake", intake.stopCommand());
         NamedCommands.registerCommand("Shoot", shooter.shooterCommand());
@@ -57,6 +63,7 @@ public class RobotContainer {
         xbox.runIntake.onTrue(intake.intakeCommand());
         xbox.runShooter.onTrue(shooter.shooterCommand());
         xbox.stop.onTrue(shooter.stopCommand().andThen(intake.stopCommand()));
+        xbox.reset.onTrue(swerve.resetHeading());
     }
 
     /**

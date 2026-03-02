@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.reduxrobotics.canand.CanandEventLoop;
+import com.reduxrobotics.sensors.canandmag.Canandmag;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -31,6 +32,7 @@ public class Robot extends LoggedRobot {
     private XBoxContainer xbox = new XBoxContainer();
     private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
+    Canandmag encoder;
 
     private final RobotContainer m_robotContainer;
 
@@ -60,11 +62,7 @@ public class Robot extends LoggedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         m_robotContainer = new RobotContainer();
-        try {
-            swerve = new SwerveSubsystem();
-        } catch (IOException name) {
-            throw new RuntimeException(name);
-        }
+        swerve = new SwerveSubsystem();
         CanandEventLoop.getInstance();
     }
 
@@ -77,7 +75,7 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotPeriodic() {
-        // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
+        // Runs athe Scheduler.  This is responsible for polling buttons, adding newly-scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
@@ -109,12 +107,12 @@ public class Robot extends LoggedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        // m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
-        // schedule the autonomous command (example)
-        if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().schedule(m_autonomousCommand);
-        }
+        // // schedule the autonomous command (example)
+        // if (m_autonomousCommand != null) {
+        //     CommandScheduler.getInstance().schedule(m_autonomousCommand);
+        // }
     }
 
     /** This function is called periodically during autonomous. */
@@ -135,7 +133,7 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        swerve.drive(-xbox.driveY(), xbox.driveX(), -xbox.rotate(), true);
+        swerve.drive(-xbox.driveY(), xbox.driveX(), xbox.rotate(), true);
     }
 
     @Override

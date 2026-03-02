@@ -24,14 +24,14 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
 
-    public SwerveSubsystem() throws IOException {
-        double maximumSpeed = Units.feetToMeters(4.5);
+    public SwerveSubsystem() {
+        double maximumSpeed = Units.feetToMeters(18);
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
-        File swerveJsonDirectory = new File(Filesystem.getDeployDirectory(), "swerve");
-        swerveDrive = new SwerveParser(swerveJsonDirectory).createSwerveDrive(maximumSpeed);
 
         RobotConfig config;
         try {
+            File swerveJsonDirectory = new File(Filesystem.getDeployDirectory(), "swerve");
+            swerveDrive = new SwerveParser(swerveJsonDirectory).createSwerveDrive(maximumSpeed);
             config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
                     this::getPose, // Robot pose supplier
@@ -114,7 +114,10 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return Drive command.
      */
     public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
-        swerveDrive.drive(new Translation2d(translationX, translationY), rotation, fieldRelative, false);
+        swerveDrive.drive(new Translation2d(translationX * swerveDrive.getMaximumChassisVelocity(),
+                                            translationY * swerveDrive.getMaximumChassisVelocity()), 
+                                            rotation * swerveDrive.getMaximumChassisAngularVelocity(), 
+                                            fieldRelative, false);
     }
 
     /*public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
@@ -139,6 +142,12 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public void resetOdometry(Pose2d pose) {
         swerveDrive.resetOdometry(pose);
+    }
+
+    public Command resetHeading() {
+        return run(() -> {
+            swerveDrive.zeroGyro();
+        });
     }
 
     public ChassisSpeeds getRobotVelocity() {
