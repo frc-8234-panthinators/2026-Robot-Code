@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
-import java.io.IOException;
 import java.util.function.DoubleSupplier;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
@@ -114,10 +113,13 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return Drive command.
      */
     public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
-        swerveDrive.drive(new Translation2d(translationX * swerveDrive.getMaximumChassisVelocity(),
-                                            translationY * swerveDrive.getMaximumChassisVelocity()), 
-                                            rotation * swerveDrive.getMaximumChassisAngularVelocity(), 
-                                            fieldRelative, false);
+        swerveDrive.drive(
+                new Translation2d(
+                        translationX * swerveDrive.getMaximumChassisVelocity(),
+                        translationY * swerveDrive.getMaximumChassisVelocity()),
+                (rotation * Math.abs(rotation)) * swerveDrive.getMaximumChassisAngularVelocity(),
+                fieldRelative,
+                false);
     }
 
     /*public void drive(Translation2d translation, double rotation, boolean fieldRelative) {

@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import java.io.IOException;
 import java.util.Optional;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -107,13 +106,14 @@ public class Robot extends LoggedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
-        // m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
 
-        // // schedule the autonomous command (example)
-        // if (m_autonomousCommand != null) {
-        //     CommandScheduler.getInstance().schedule(m_autonomousCommand);
-        // }
-    }
+        // schedule the autonomous command (example)
+        if (m_autonomousCommand != null) {
+            CommandScheduler.getInstance().schedule(m_autonomousCommand);
+        }
+    };
 
     /** This function is called periodically during autonomous. */
     @Override

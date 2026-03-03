@@ -6,13 +6,10 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 
@@ -26,7 +23,6 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final XBoxContainer xbox;
     private final SwerveSubsystem swerve;
-    private final IntakeSubsystem intake;
     private final ShooterSubsystem shooter;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -36,13 +32,11 @@ public class RobotContainer {
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         xbox = new XBoxContainer();
-        intake = new IntakeSubsystem();
         shooter = new ShooterSubsystem();
         swerve = new SwerveSubsystem();
 
         NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
-        NamedCommands.registerCommand("Intake", intake.intakeCommand());
-        NamedCommands.registerCommand("StopIntake", intake.stopCommand());
+        NamedCommands.registerCommand("Intake", shooter.intakeCommand());
         NamedCommands.registerCommand("Shoot", shooter.shooterCommand());
         NamedCommands.registerCommand("StopShooter", shooter.stopCommand());
 
@@ -60,9 +54,9 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        xbox.runIntake.onTrue(intake.intakeCommand());
+        xbox.runIntake.onTrue(shooter.intakeCommand());
         xbox.runShooter.onTrue(shooter.shooterCommand());
-        xbox.stop.onTrue(shooter.stopCommand().andThen(intake.stopCommand()));
+        xbox.stop.onTrue(shooter.stopCommand());
         xbox.reset.onTrue(swerve.resetHeading());
     }
 
@@ -73,6 +67,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return new PathPlannerAuto("Example Auto");
+        return new PathPlannerAuto("ShootAuto");
     }
 }
