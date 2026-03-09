@@ -24,7 +24,7 @@ public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
 
     public SwerveSubsystem() {
-        double maximumSpeed = Units.feetToMeters(18);
+        double maximumSpeed = Units.feetToMeters(16.4);
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         RobotConfig config;
@@ -41,8 +41,8 @@ public class SwerveSubsystem extends SubsystemBase {
                     // optionally outputs individual module feedforwards
                     new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller
                             // for holonomic drive trains
-                            new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                            new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                            new PIDConstants(1.0, 0.0, 0.05), // Translation PID constants
+                            new PIDConstants(50.0, 0.0, 0.3) // Rotation PID constants
                             ),
                     config, // The robot configuration
                     () -> {
@@ -88,7 +88,7 @@ public class SwerveSubsystem extends SubsystemBase {
             DoubleSupplier translationY,
             DoubleSupplier headingX,
             DoubleSupplier headingY) {
-        return run(() -> {
+        return this.run(() -> {
             Translation2d scaledInputs = SwerveMath.scaleTranslation(
                     new Translation2d(translationX.getAsDouble(), translationY.getAsDouble()), 0.8);
 
@@ -147,7 +147,7 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     public Command resetHeading() {
-        return run(() -> {
+        return this.runOnce(() -> {
             swerveDrive.zeroGyro();
         });
     }

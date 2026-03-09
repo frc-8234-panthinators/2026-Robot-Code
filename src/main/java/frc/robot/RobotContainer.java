@@ -30,10 +30,10 @@ public class RobotContainer {
             new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer() {
-        xbox = new XBoxContainer();
+    public RobotContainer(XBoxContainer xbox, SwerveSubsystem swerve) {
+        this.xbox = xbox;
         shooter = new ShooterSubsystem();
-        swerve = new SwerveSubsystem();
+        this.swerve = swerve;
 
         NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
         NamedCommands.registerCommand("Intake", shooter.intakeCommand());

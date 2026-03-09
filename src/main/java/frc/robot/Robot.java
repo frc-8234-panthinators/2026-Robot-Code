@@ -13,13 +13,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import java.util.Optional;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.targeting.PhotonTrackedTarget;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -60,8 +57,8 @@ public class Robot extends LoggedRobot {
         Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
-        m_robotContainer = new RobotContainer();
         swerve = new SwerveSubsystem();
+        m_robotContainer = new RobotContainer(xbox, swerve);
         CanandEventLoop.getInstance();
     }
 
@@ -80,20 +77,20 @@ public class Robot extends LoggedRobot {
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
 
-        Optional<EstimatedRobotPose> poseGeoffery = vision.getEstimatedMainCamPose();
-        if (poseGeoffery.isPresent()) {
-            EstimatedRobotPose poseReal = poseGeoffery.get();
-            double lowestAmbiguity = 1;
+        // Optional<EstimatedRobotPose> poseGeoffery = vision.getEstimatedMainCamPose();
+        // if (poseGeoffery.isPresent()) {
+        //     EstimatedRobotPose poseReal = poseGeoffery.get();
+        //     double lowestAmbiguity = 1;
 
-            for (PhotonTrackedTarget target : poseReal.targetsUsed) {
-                if (target.getPoseAmbiguity() < lowestAmbiguity) {
-                    lowestAmbiguity = target.getPoseAmbiguity();
-                }
-            }
-            if (lowestAmbiguity <= 0.1) {
-                swerve.addVisionMeasurement(poseReal.estimatedPose.toPose2d(), poseReal.timestampSeconds);
-            }
-        }
+        //     for (PhotonTrackedTarget target : poseReal.targetsUsed) {
+        //         if (target.getPoseAmbiguity() < lowestAmbiguity) {
+        //             lowestAmbiguity = target.getPoseAmbiguity();
+        //         }
+        //     }
+        //     if (lowestAmbiguity <= 0.1) {
+        //         swerve.addVisionMeasurement(poseReal.estimatedPose.toPose2d(), poseReal.timestampSeconds);
+        //     }
+        // }
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -113,7 +110,8 @@ public class Robot extends LoggedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
-    };
+    }
+    ;
 
     /** This function is called periodically during autonomous. */
     @Override
@@ -133,7 +131,7 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        swerve.drive(-xbox.driveY(), xbox.driveX(), xbox.rotate(), true);
+        swerve.drive(xbox.driveY(), xbox.driveX(), xbox.rotate(), true);
     }
 
     @Override

@@ -11,7 +11,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class ShooterSubsystem extends SubsystemBase {
     private static final int SHOOTER_CAN_ID = 20;
@@ -72,22 +71,24 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public Command shooterCommand() {
-        return run(() -> {
-            spinShooter(0.8);
-        }).withTimeout(0.35).andThen(run(() -> {
-            spinIndexer(-0.8);
-        }));
+        return this.runOnce(() -> {
+                    spinShooter(0.8);
+                })
+                .withTimeout(0.35)
+                .andThen(this.runOnce(() -> {
+                    spinIndexer(0.8);
+                }));
     }
 
     public Command intakeCommand() {
-        return run(() -> {
-            spinIndexer(0.5);
+        return this.runOnce(() -> {
+            spinIndexer(-0.5);
             spinShooter(0.7);
         });
     }
 
     public Command stopCommand() {
-        return run(() -> {
+        return this.runOnce(() -> {
             stopIndexer();
             stopShooter();
         });
