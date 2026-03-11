@@ -21,46 +21,73 @@ import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 
 public class VisionSubsystem extends SubsystemBase {
-    PhotonCamera mainCam;
-    PhotonPoseEstimator mainCamEstimator;
+    // PhotonCamera leftCam;
+    PhotonCamera rightCam;
+    // PhotonPoseEstimator leftCamEstimator;
+    PhotonPoseEstimator rightCamEstimator;
 
-    PhotonCameraSim mainCamSim;
+    // PhotonCameraSim leftCamSim;
+    PhotonCameraSim rightCamSim;
     VisionSystemSim visionSim;
 
     AprilTagFieldLayout tags;
 
     public VisionSubsystem() {
-        mainCam = new PhotonCamera("mainCam");
+        // leftCam = new PhotonCamera("leftCam");
+        rightCam = new PhotonCamera("rightCam");
         tags = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
-        mainCamEstimator = new PhotonPoseEstimator(
+        // leftCamEstimator = new PhotonPoseEstimator(
+        //         tags,
+        //         PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+        //         new Transform3d(
+        //                 new Translation3d(Units.inchesToMeters(-5), Units.inchesToMeters(9),
+        // Units.inchesToMeters(24)),
+        //                 new Rotation3d(
+        //                         Units.degreesToRadians(0), Units.degreesToRadians(-20), Units.degreesToRadians(0))));
+        rightCamEstimator = new PhotonPoseEstimator(
                 tags,
                 PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
                 new Transform3d(
-                        new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(0), Units.inchesToMeters(0)),
+                        new Translation3d(Units.inchesToMeters(-5), Units.inchesToMeters(-9), Units.inchesToMeters(24)),
                         new Rotation3d(
-                                Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(0))));
+                                Units.degreesToRadians(0), Units.degreesToRadians(-20), Units.degreesToRadians(0))));
 
         if (Robot.isSimulation()) {
             visionSim = new VisionSystemSim("main");
             visionSim.addAprilTags(tags);
             var cameraProp = new SimCameraProperties();
-            cameraProp.setCalibration(1280, 960, Rotation2d.fromDegrees(100));
+            cameraProp.setCalibration(1280, 960, Rotation2d.fromDegrees(70));
             cameraProp.setCalibError(0.7, 0.2);
             cameraProp.setFPS(50);
             cameraProp.setAvgLatencyMs(33);
             cameraProp.setLatencyStdDevMs(15);
 
-            mainCamSim = new PhotonCameraSim(mainCam, cameraProp);
+            // leftCamSim = new PhotonCameraSim(leftCam, cameraProp);
+            // visionSim.addCamera(
+            //         leftCamSim,
+            //         new Transform3d(
+            //                 new Translation3d(
+            //                         Units.inchesToMeters(-5), Units.inchesToMeters(9), Units.inchesToMeters(24)),
+            //                 new Rotation3d(
+            //                         Units.degreesToRadians(0),
+            //                         Units.degreesToRadians(-20),
+            //                         Units.degreesToRadians(0))));
+            // leftCamSim.enableRawStream(true);
+            // leftCamSim.enableProcessedStream(true);
+            // leftCamSim.enableDrawWireframe(true);
+            rightCamSim = new PhotonCameraSim(rightCam, cameraProp);
             visionSim.addCamera(
-                    mainCamSim,
+                    rightCamSim,
                     new Transform3d(
                             new Translation3d(
-                                    Units.inchesToMeters(0), Units.inchesToMeters(0), Units.inchesToMeters(0)),
+                                    Units.inchesToMeters(-5), Units.inchesToMeters(9), Units.inchesToMeters(24)),
                             new Rotation3d(
-                                    Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(0))));
-            mainCamSim.enableRawStream(true);
-            mainCamSim.enableProcessedStream(true);
-            mainCamSim.enableDrawWireframe(true);
+                                    Units.degreesToRadians(0),
+                                    Units.degreesToRadians(-20),
+                                    Units.degreesToRadians(0))));
+            rightCamSim.enableRawStream(true);
+            rightCamSim.enableProcessedStream(true);
+            rightCamSim.enableDrawWireframe(true);
         }
     }
 
@@ -68,14 +95,35 @@ public class VisionSubsystem extends SubsystemBase {
         visionSim.update(pose);
     }
 
-    public Optional<EstimatedRobotPose> getEstimatedMainCamPose() {
-        var result = mainCam.getLatestResult();
+    // public Optional<EstimatedRobotPose> getEstimatedLeftCamPose() {
+    //     var result = leftCam.getLatestResult();
+    //     if (!result.hasTargets()) {
+    //         return Optional.empty();
+    //     }
+
+    //     if (Robot.isSimulation()) {
+    //         leftCamEstimator
+    //                 .update(result)
+    //                 .ifPresentOrElse(
+    //                         est -> getSimDebugField()
+    //                                 .getObject("VisionEstimation")
+    //                                 .setPose(est.estimatedPose.toPose2d()),
+    //                         () -> {
+    //                             getSimDebugField().getObject("VisionEstimation").setPoses();
+    //                         });
+    //     }
+
+    //     return leftCamEstimator.update(result);
+    // }
+
+    public Optional<EstimatedRobotPose> getEstimatedRightCamPose() {
+        var result = rightCam.getLatestResult();
         if (!result.hasTargets()) {
             return Optional.empty();
         }
 
         if (Robot.isSimulation()) {
-            mainCamEstimator
+            rightCamEstimator
                     .update(result)
                     .ifPresentOrElse(
                             est -> getSimDebugField()
@@ -86,7 +134,7 @@ public class VisionSubsystem extends SubsystemBase {
                             });
         }
 
-        return mainCamEstimator.update(result);
+        return rightCamEstimator.update(result);
     }
 
     public void simulationPeriodic(Pose2d robotSimPose) {
