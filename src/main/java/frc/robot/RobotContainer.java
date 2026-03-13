@@ -58,6 +58,8 @@ public class RobotContainer {
         xbox.runShooter.onTrue(shooter.shooterCommand());
         xbox.stop.onTrue(shooter.stopCommand());
         xbox.reset.onTrue(swerve.resetHeading());
+        xbox.dpadDown.onTrue(shooter.nudgeDownCommand());
+        xbox.dpadUp.onTrue(shooter.nudgeUpCommand());
     }
 
     /**

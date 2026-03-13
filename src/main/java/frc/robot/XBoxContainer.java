@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class XBoxContainer {
     private XboxController controller = new XboxController(0);
@@ -10,6 +11,9 @@ public class XBoxContainer {
     public JoystickButton runShooter = new JoystickButton(controller, XboxController.Button.kB.value);
     public JoystickButton stop = new JoystickButton(controller, XboxController.Button.kA.value);
     public JoystickButton reset = new JoystickButton(controller, XboxController.Button.kX.value);
+
+    public Trigger dpadDown = new Trigger(() -> controller.getPOV() == 180);
+    public Trigger dpadUp = new Trigger(() -> controller.getPOV() == 0);
 
     public boolean getControllerXButton() {
         return (controller.getLeftStickButton());

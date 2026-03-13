@@ -10,6 +10,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -21,6 +22,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double kI = 0.0;
     private static final double kD = 0.1;
     private static final double kV = 0.6; // Feed Forward
+
+    private static double shooterSpeed = 0.90;
 
     private static final double MAX_VELOCITY = 30;
     private static final double MAX_ACCELERATION = 40;
@@ -70,13 +73,25 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor.set(0);
     }
 
+    public void nudgeUp() {
+        if (shooterSpeed < 1) {
+            shooterSpeed += 0.01;
+        }
+    }
+
+    public void nudgeDown() {
+        if (shooterSpeed > 0) {
+            shooterSpeed -= 0.01;
+        }
+    }
+
     public Command shooterCommand() {
         return this.runOnce(() -> {
-                    spinShooter(0.8);
+                    spinShooter(shooterSpeed);
                 })
-                .withTimeout(0.35)
+                .andThen(Commands.waitSeconds(0.7))
                 .andThen(this.runOnce(() -> {
-                    spinIndexer(0.8);
+                    spinIndexer(0.7);
                 }));
     }
 
@@ -91,6 +106,18 @@ public class ShooterSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             stopIndexer();
             stopShooter();
+        });
+    }
+
+    public Command nudgeUpCommand() {
+        return this.runOnce(() -> {
+            nudgeUp();
+        });
+    }
+
+    public Command nudgeDownCommand() {
+        return this.runOnce(() -> {
+            nudgeDown();
         });
     }
 }

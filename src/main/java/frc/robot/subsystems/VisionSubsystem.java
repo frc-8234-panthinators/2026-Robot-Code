@@ -2,33 +2,43 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import java.util.List;
 import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class VisionSubsystem extends SubsystemBase {
     // PhotonCamera leftCam;
-    PhotonCamera rightCam;
+    private final PhotonCamera rightCam;
     // PhotonPoseEstimator leftCamEstimator;
-    PhotonPoseEstimator rightCamEstimator;
+    private final PhotonPoseEstimator rightCamEstimator;
 
     // PhotonCameraSim leftCamSim;
-    PhotonCameraSim rightCamSim;
-    VisionSystemSim visionSim;
+    private PhotonCameraSim rightCamSim;
+    private VisionSystemSim visionSim;
+
+    public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
+    public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+    private Matrix<N3, N1> curStdDevs;
 
     AprilTagFieldLayout tags;
 
@@ -38,7 +48,6 @@ public class VisionSubsystem extends SubsystemBase {
         tags = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
         // leftCamEstimator = new PhotonPoseEstimator(
         //         tags,
-        //         PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
         //         new Transform3d(
         //                 new Translation3d(Units.inchesToMeters(-5), Units.inchesToMeters(9),
         // Units.inchesToMeters(24)),
@@ -46,9 +55,9 @@ public class VisionSubsystem extends SubsystemBase {
         //                         Units.degreesToRadians(0), Units.degreesToRadians(-20), Units.degreesToRadians(0))));
         rightCamEstimator = new PhotonPoseEstimator(
                 tags,
-                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
                 new Transform3d(
-                        new Translation3d(Units.inchesToMeters(-5), Units.inchesToMeters(-9), Units.inchesToMeters(24)),
+                        new Translation3d(
+                                Units.inchesToMeters(-3.952), Units.inchesToMeters(-8.4), Units.inchesToMeters(24.75)),
                         new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-20), Units.degreesToRadians(0))));
 
@@ -67,10 +76,11 @@ public class VisionSubsystem extends SubsystemBase {
             //         leftCamSim,
             //         new Transform3d(
             //                 new Translation3d(
-            //                         Units.inchesToMeters(-5), Units.inchesToMeters(9), Units.inchesToMeters(24)),
+            //                         Units.inchesToMeters(-3.952), Units.inchesToMeters(8.4),
+            // Units.inchesToMeters(24.75)),
             //                 new Rotation3d(
             //                         Units.degreesToRadians(0),
-            //                         Units.degreesToRadians(-20),
+            //                         Units.degreesToRadians(20),
             //                         Units.degreesToRadians(0))));
             // leftCamSim.enableRawStream(true);
             // leftCamSim.enableProcessedStream(true);
@@ -80,11 +90,11 @@ public class VisionSubsystem extends SubsystemBase {
                     rightCamSim,
                     new Transform3d(
                             new Translation3d(
-                                    Units.inchesToMeters(-5), Units.inchesToMeters(9), Units.inchesToMeters(24)),
+                                    Units.inchesToMeters(-3.952),
+                                    Units.inchesToMeters(-8.4),
+                                    Units.inchesToMeters(24.75)),
                             new Rotation3d(
-                                    Units.degreesToRadians(0),
-                                    Units.degreesToRadians(-20),
-                                    Units.degreesToRadians(0))));
+                                    Units.degreesToRadians(0), Units.degreesToRadians(20), Units.degreesToRadians(0))));
             rightCamSim.enableRawStream(true);
             rightCamSim.enableProcessedStream(true);
             rightCamSim.enableDrawWireframe(true);
@@ -103,7 +113,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     //     if (Robot.isSimulation()) {
     //         leftCamEstimator
-    //                 .update(result)
+    //                 .estimateCoprocMultiTagPose(result)
     //                 .ifPresentOrElse(
     //                         est -> getSimDebugField()
     //                                 .getObject("VisionEstimation")
@@ -113,28 +123,85 @@ public class VisionSubsystem extends SubsystemBase {
     //                         });
     //     }
 
-    //     return leftCamEstimator.update(result);
+    //     return leftCamEstimator.estimateCoprocMultiTagPose(result);
     // }
 
-    public Optional<EstimatedRobotPose> getEstimatedRightCamPose() {
-        var result = rightCam.getLatestResult();
-        if (!result.hasTargets()) {
-            return Optional.empty();
-        }
+    public void periodic(SwerveSubsystem swerve) {
+        List<Optional<EstimatedRobotPose>> list = List.of();
+        for (PhotonPipelineResult result : rightCam.getAllUnreadResults()) {
+            var visionRightEst = rightCamEstimator.estimateCoprocMultiTagPose(result);
 
-        if (Robot.isSimulation()) {
-            rightCamEstimator
-                    .update(result)
-                    .ifPresentOrElse(
-                            est -> getSimDebugField()
-                                    .getObject("VisionEstimation")
-                                    .setPose(est.estimatedPose.toPose2d()),
-                            () -> {
-                                getSimDebugField().getObject("VisionEstimation").setPoses();
-                            });
-        }
+            if (visionRightEst.isEmpty()) {
+                visionRightEst = rightCamEstimator.estimateLowestAmbiguityPose(result);
+            }
+            updateEstimationStdDevs(visionRightEst, result.getTargets());
 
-        return rightCamEstimator.update(result);
+            if (Robot.isSimulation()) {
+                visionRightEst.ifPresentOrElse(
+                        est -> getSimDebugField().getObject("VisionEstimation").setPose(est.estimatedPose.toPose2d()),
+                        () -> {
+                            getSimDebugField().getObject("VisionEstimation").setPoses();
+                        });
+            }
+
+            visionRightEst.ifPresent(est -> {
+                // Change our trust in the measurement based on the tags we can see
+                var estStdDevs = getEstimationStdDevs();
+
+                swerve.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+            });
+        }
+    }
+
+    private void updateEstimationStdDevs(
+            Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
+        if (estimatedPose.isEmpty()) {
+            // No pose input. Default to single-tag std devs
+            curStdDevs = kSingleTagStdDevs;
+
+        } else {
+            // Pose present. Start running Heuristic
+            var estStdDevs = kSingleTagStdDevs;
+            int numTags = 0;
+            double avgDist = 0;
+
+            // Precalculation - see how many tags we found, and calculate an average-distance metric
+            for (var tgt : targets) {
+                var tagPose = rightCamEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+                if (tagPose.isEmpty()) continue;
+                numTags++;
+                avgDist += tagPose.get()
+                        .toPose2d()
+                        .getTranslation()
+                        .getDistance(
+                                estimatedPose.get().estimatedPose.toPose2d().getTranslation());
+            }
+
+            if (numTags == 0) {
+                // No tags visible. Default to single-tag std devs
+                curStdDevs = kSingleTagStdDevs;
+            } else {
+                // One or more tags visible, run the full heuristic.
+                avgDist /= numTags;
+                // Decrease std devs if multiple targets are visible
+                if (numTags > 1) estStdDevs = kMultiTagStdDevs;
+                // Increase std devs based on (average) distance
+                if (numTags == 1 && avgDist > 4)
+                    estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+                else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
+                curStdDevs = estStdDevs;
+            }
+        }
+    }
+
+    /**
+     * Returns the latest standard deviations of the estimated pose from {@link
+     * #getEstimatedGlobalPose()}, for use with {@link
+     * edu.wpi.first.math.estimator.SwerveDrivePoseEstimator SwerveDrivePoseEstimator}. This should
+     * only be used when there are targets visible.
+     */
+    public Matrix<N3, N1> getEstimationStdDevs() {
+        return curStdDevs;
     }
 
     public void simulationPeriodic(Pose2d robotSimPose) {

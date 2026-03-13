@@ -77,20 +77,9 @@ public class Robot extends LoggedRobot {
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
 
-        // Optional<EstimatedRobotPose> poseGeoffery = vision.getEstimatedMainCamPose();
-        // if (poseGeoffery.isPresent()) {
-        //     EstimatedRobotPose poseReal = poseGeoffery.get();
-        //     double lowestAmbiguity = 1;
-
-        //     for (PhotonTrackedTarget target : poseReal.targetsUsed) {
-        //         if (target.getPoseAmbiguity() < lowestAmbiguity) {
-        //             lowestAmbiguity = target.getPoseAmbiguity();
-        //         }
-        //     }
-        //     if (lowestAmbiguity <= 0.1) {
-        //         swerve.addVisionMeasurement(poseReal.estimatedPose.toPose2d(), poseReal.timestampSeconds);
-        //     }
-        // }
+        // Correct pose estimate with vision measurements
+        vision.periodic(swerve);
+        Logger.recordOutput("RobotPose", swerve.getPose());
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -156,6 +145,6 @@ public class Robot extends LoggedRobot {
         Logger.recordOutput("RobotPose", swerve.getSimulationDriveTrainPose());
         vision.updateVisionSim(swerve.getPose());
         // Logger.recordOutput("VisionLeftPose", vision.getEstimatedLeftCamPose().toString());
-        Logger.recordOutput("VisionRightPose", vision.getEstimatedRightCamPose().toString());
+        // Logger.recordOutput("VisionRightPose", vision.getEstimatedRightCamPose().toString());
     }
 }
