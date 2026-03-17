@@ -28,7 +28,6 @@ public class Robot extends LoggedRobot {
     private XBoxContainer xbox = new XBoxContainer();
     private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
-    Canandmag encoder;
 
     private final RobotContainer m_robotContainer;
 
@@ -57,8 +56,8 @@ public class Robot extends LoggedRobot {
         Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
-        swerve = new SwerveSubsystem();
-        m_robotContainer = new RobotContainer(xbox, swerve);
+        swerve = new SwerveSubsystem(vision);
+        m_robotContainer = new RobotContainer(swerve, vision, xbox);
         CanandEventLoop.getInstance();
     }
 

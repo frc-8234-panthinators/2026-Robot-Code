@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -24,21 +25,24 @@ public class RobotContainer {
     private final XBoxContainer xbox;
     private final SwerveSubsystem swerve;
     private final ShooterSubsystem shooter;
+    private final VisionSubsystem vision;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController m_driverController =
             new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer(XBoxContainer xbox, SwerveSubsystem swerve) {
+    public RobotContainer(SwerveSubsystem swerve, VisionSubsystem vision, XBoxContainer xbox) {
         this.xbox = xbox;
         shooter = new ShooterSubsystem();
         this.swerve = swerve;
+        this.vision = vision;
 
         NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
         NamedCommands.registerCommand("Intake", shooter.intakeCommand());
         NamedCommands.registerCommand("Shoot", shooter.shooterCommand());
         NamedCommands.registerCommand("StopShooter", shooter.stopCommand());
+        NamedCommands.registerCommand("Align", swerve.alignCommand());
 
         // Configure the trigger bindings
         configureBindings();
@@ -56,8 +60,9 @@ public class RobotContainer {
     private void configureBindings() {
         xbox.runIntake.onTrue(shooter.intakeCommand());
         xbox.runShooter.onTrue(shooter.shooterCommand());
-        xbox.stop.onTrue(shooter.stopCommand());
+        xbox.stop.onTrue(shooter.stopCommand().andThen(swerve.stopAlignCommand()));
         xbox.reset.onTrue(swerve.resetHeading());
+        xbox.align.onTrue(swerve.alignCommand());
         xbox.dpadDown.onTrue(shooter.nudgeDownCommand());
         xbox.dpadUp.onTrue(shooter.nudgeUpCommand());
     }
