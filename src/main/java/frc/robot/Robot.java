@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -24,6 +25,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  */
 public class Robot extends LoggedRobot {
     private SwerveSubsystem swerve;
+    private ShooterSubsystem shooter = new ShooterSubsystem();
     private XBoxContainer xbox = new XBoxContainer();
     private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
@@ -78,6 +80,7 @@ public class Robot extends LoggedRobot {
         // Correct pose estimate with vision measurements
         vision.periodic(swerve);
         Logger.recordOutput("RobotPose", swerve.getPose());
+        Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
     }
 
     /** This function is called once each time the robot enters Disabled mode. */

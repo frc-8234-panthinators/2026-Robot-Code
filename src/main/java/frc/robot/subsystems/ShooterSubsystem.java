@@ -18,12 +18,12 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final int INDEXER_CAN_ID = 21;
     private static final int SHOOTER_2_CAN_ID = 22;
 
-    private static final double kP = 0.5;
-    private static final double kI = 0.0;
+    private static final double kP = 1.75;
+    private static final double kI = 0.5;
     private static final double kD = 0.1;
-    private static final double kV = 0.6; // Feed Forward
+    private static final double kV = 0; // Feed Forward
 
-    private static double shooterSpeed = 0.90;
+    private static double shooterSpeed = 0.83;
 
     private static final double MAX_VELOCITY = 30;
     private static final double MAX_ACCELERATION = 40;
@@ -52,9 +52,17 @@ public class ShooterSubsystem extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimit = 40;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        indexerMotor.getConfigurator().apply(config);
+        
         shooterMotor.getConfigurator().apply(config);
         shooter2Motor.setControl(new Follower(SHOOTER_CAN_ID, MotorAlignmentValue.Opposed));
+        
+
+        config.Slot0.kP = 0.5;
+        config.Slot0.kI = 0;
+        config.Slot0.kD = 0.1;
+        config.Slot0.kV = 0.6;
+
+        indexerMotor.getConfigurator().apply(config);
     }
 
     public void spinIndexer(double value) {
@@ -91,7 +99,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 })
                 .andThen(Commands.waitSeconds(0.7))
                 .andThen(this.runOnce(() -> {
-                    spinIndexer(0.7);
+                    spinIndexer(shooterSpeed);
                 }));
     }
 
@@ -119,5 +127,13 @@ public class ShooterSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             nudgeDown();
         });
+    }
+
+    public double[] getSpeeds() {
+        double[] speeds = new double[3];
+        speeds[0] = shooterMotor.getVelocity().getValueAsDouble();
+        speeds[1] = indexerMotor.getVelocity().getValueAsDouble();
+        speeds[2] = shooter2Motor.getVelocity().getValueAsDouble();
+        return speeds;
     }
 }

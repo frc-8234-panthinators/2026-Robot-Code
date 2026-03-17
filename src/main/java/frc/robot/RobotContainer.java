@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
@@ -26,6 +27,7 @@ public class RobotContainer {
     private final SwerveSubsystem swerve;
     private final ShooterSubsystem shooter;
     private final VisionSubsystem vision;
+    private final ClimberSubsystem climber;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController m_driverController =
@@ -35,6 +37,7 @@ public class RobotContainer {
     public RobotContainer(SwerveSubsystem swerve, VisionSubsystem vision, XBoxContainer xbox) {
         this.xbox = xbox;
         shooter = new ShooterSubsystem();
+        climber = new ClimberSubsystem();
         this.swerve = swerve;
         this.vision = vision;
 
@@ -43,6 +46,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("Shoot", shooter.shooterCommand());
         NamedCommands.registerCommand("StopShooter", shooter.stopCommand());
         NamedCommands.registerCommand("Align", swerve.alignCommand());
+        NamedCommands.registerCommand("Climb", climber.climbCommand());
 
         // Configure the trigger bindings
         configureBindings();
@@ -65,6 +69,8 @@ public class RobotContainer {
         xbox.align.onTrue(swerve.alignCommand());
         xbox.dpadDown.onTrue(shooter.nudgeDownCommand());
         xbox.dpadUp.onTrue(shooter.nudgeUpCommand());
+        xbox.climb.onTrue(climber.climbCommand());
+        xbox.neutral.onTrue(climber.neutralCommand());
     }
 
     /**
