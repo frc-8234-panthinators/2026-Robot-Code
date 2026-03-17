@@ -7,6 +7,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -16,7 +17,12 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
+
+import org.littletonrobotics.junction.Logger;
+import org.photonvision.EstimatedRobotPose;
+
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
@@ -25,9 +31,16 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
+    private boolean align;
+    private Pose2d position;
 
-    public SwerveSubsystem() {
-        double maximumSpeed = Units.feetToMeters(16.4);
+    private VisionSubsystem vision;
+
+    private final Translation2d redHub = new Translation2d(Units.inchesToMeters(492.6), Units.inchesToMeters(162.15));
+    private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(158.6), Units.inchesToMeters(162.15));
+
+    public SwerveSubsystem(VisionSubsystem vision) {
+        double maximumSpeed = Units.feetToMeters(5);
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         RobotConfig config;
@@ -61,6 +74,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     },
                     this // Reference to this subsystem to set requirements
                     );
+            this.vision = vision;
         } catch (Exception e) {
             // Handle exception as needed
             e.printStackTrace();
@@ -116,13 +130,33 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return Drive command.
      */
     public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
-        swerveDrive.drive(
+        Logger.recordOutput("Align", this.align);
+        if (!this.align) {
+            swerveDrive.drive(
+                    new Translation2d(
+                            translationX * swerveDrive.getMaximumChassisVelocity(),
+                            translationY * swerveDrive.getMaximumChassisVelocity()),
+                    .5 * (rotation * Math.abs(rotation)) * swerveDrive.getMaximumChassisAngularVelocity(),
+                    fieldRelative,
+                    false);
+        } else {
+            Pose2d pose = new Pose2d();
+            if (position != null/*&& position.isPresent()*/) {
+                //pose = position.get().estimatedPose.getTranslation();
+                pose = position;
+                Logger.recordOutput("pose", pose);
+                Logger.recordOutput("hub", blueHub);
+            }
+            double angle = Math.atan2((pose.getTranslation().getY() - blueHub.getY()), (blueHub.getX() - pose.getTranslation().getX()));
+            Logger.recordOutput("angle", Units.radiansToDegrees(angle));
+            swerveDrive.drive(
                 new Translation2d(
-                        translationX * swerveDrive.getMaximumChassisVelocity(),
-                        translationY * swerveDrive.getMaximumChassisVelocity()),
-                (rotation * Math.abs(rotation)) * swerveDrive.getMaximumChassisAngularVelocity(),
-                fieldRelative,
+                        ((translationY * Math.sin(angle)) - (translationX * -Math.cos(angle))) * swerveDrive.getMaximumChassisVelocity(),
+                        ((translationY * Math.cos(angle)) - (translationX * Math.sin(angle))) * swerveDrive.getMaximumChassisVelocity()),
+                (-pose.getRotation().getRadians() - angle) * 5 * swerveDrive.getMaximumChassisAngularVelocity(),
+                true,
                 false);
+        }
     }
 
     /*public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
@@ -161,5 +195,22 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public void driveRelative(ChassisSpeeds chassis) {
         swerveDrive.drive(chassis);
+    }
+
+    public Command alignCommand() {
+        return runOnce(() -> {this.align = true;}).andThen(
+            run(() -> {
+                //Optional<EstimatedRobotPose> pose = vision.getEstimatedMainCamPose();
+                Pose2d pose = getSimulationDriveTrainPose();
+                //if (pose.isPresent()) {
+                position = pose;
+                //}
+            }));
+    }
+
+    public Command stopAlignCommand() {
+        return runOnce(() -> {
+            align = false;
+        });
     }
 }

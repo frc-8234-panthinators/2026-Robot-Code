@@ -17,6 +17,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import java.util.List;
 import java.util.Optional;
+
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -40,7 +42,7 @@ public class VisionSubsystem extends SubsystemBase {
     public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
     private Matrix<N3, N1> curStdDevs;
 
-    AprilTagFieldLayout tags;
+    private AprilTagFieldLayout tags;
 
     public VisionSubsystem() {
         // leftCam = new PhotonCamera("leftCam");
