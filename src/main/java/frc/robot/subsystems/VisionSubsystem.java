@@ -17,8 +17,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import java.util.List;
 import java.util.Optional;
-
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -129,8 +127,8 @@ public class VisionSubsystem extends SubsystemBase {
     // }
 
     public void periodic(SwerveSubsystem swerve) {
-        List<Optional<EstimatedRobotPose>> list = List.of();
-        for (PhotonPipelineResult result : rightCam.getAllUnreadResults()) {
+        var results = rightCam.getAllUnreadResults();
+        for (PhotonPipelineResult result : results) {
             var visionRightEst = rightCamEstimator.estimateCoprocMultiTagPose(result);
 
             if (visionRightEst.isEmpty()) {

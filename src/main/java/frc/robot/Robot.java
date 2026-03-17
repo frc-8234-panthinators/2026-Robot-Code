@@ -5,7 +5,6 @@
 package frc.robot;
 
 import com.reduxrobotics.canand.CanandEventLoop;
-import com.reduxrobotics.sensors.canandmag.Canandmag;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -56,7 +55,7 @@ public class Robot extends LoggedRobot {
         Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
-        swerve = new SwerveSubsystem(vision);
+        swerve = new SwerveSubsystem();
         m_robotContainer = new RobotContainer(swerve, vision, xbox);
         CanandEventLoop.getInstance();
     }
