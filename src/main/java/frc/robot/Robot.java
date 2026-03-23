@@ -4,10 +4,17 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
 import com.reduxrobotics.canand.CanandEventLoop;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -29,6 +36,19 @@ public class Robot extends LoggedRobot {
     private XBoxContainer xbox = new XBoxContainer();
     private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
+    private int allianceOffset = 1;
+    private AddressableLED m_led;
+    private AddressableLEDBuffer m_ledBuffer;
+
+    private final LEDPattern m_rainbow = LEDPattern.rainbow(255, 255);
+
+    // Our LED strip has a density of 120 LEDs per meter
+    private static final Distance kLedSpacing = Meters.of(1 / 720.0);
+
+    // Create a new pattern that scrolls the rainbow pattern across the LED strip, moving at a speed
+    // of 1 meter per second.
+    private final LEDPattern m_scrollingRainbow =
+            m_rainbow.scrollAtAbsoluteSpeed(MetersPerSecond.of(0.01), kLedSpacing);
 
     private final RobotContainer m_robotContainer;
 
@@ -60,6 +80,25 @@ public class Robot extends LoggedRobot {
         swerve = new SwerveSubsystem();
         m_robotContainer = new RobotContainer(swerve, vision, xbox);
         CanandEventLoop.getInstance();
+
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
+        } else {
+            allianceOffset = -1;
+        }
+
+        m_led = new AddressableLED(0);
+
+        // Reuse buffer
+        // Default to a length of 60, start empty output
+        // Length is expensive to set, so only set it once, then just update data
+        m_ledBuffer = new AddressableLEDBuffer(32);
+        m_led.setLength(m_ledBuffer.getLength());
+
+        // Set the data
+        m_led.setData(m_ledBuffer);
+        m_led.start();
     }
 
     /**
@@ -71,6 +110,10 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotPeriodic() {
+        // Update the buffer with the rainbow animation
+        m_scrollingRainbow.applyTo(m_ledBuffer);
+        // Set the LEDs
+        m_led.setData(m_ledBuffer);
         // Runs athe Scheduler.  This is responsible for polling buttons, adding newly-scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
@@ -81,6 +124,8 @@ public class Robot extends LoggedRobot {
         vision.periodic(swerve);
         Logger.recordOutput("RobotPose", swerve.getPose());
         Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
+        Logger.recordOutput("DistanceFromHub", swerve.getDistanceFromHub());
+        Logger.recordOutput("ShooterSetSpeed", shooter.getSetSpeed());
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -121,7 +166,8 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        swerve.drive(-xbox.driveY(), -xbox.driveX(), -xbox.rotate(), true);
+
+        swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), true);
     }
 
     @Override

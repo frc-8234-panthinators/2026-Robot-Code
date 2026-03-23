@@ -4,6 +4,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -33,8 +34,15 @@ public class SwerveSubsystem extends SubsystemBase {
     private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(158.6), Units.inchesToMeters(162.15));
 
     public SwerveSubsystem() {
-        double maximumSpeed = Units.feetToMeters(16.4);
+        double maximumSpeed = Units.feetToMeters(17.4);
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            allianceBoolean = (alliance.get() == DriverStation.Alliance.Red);
+        } else {
+            allianceBoolean = false;
+        }
 
         RobotConfig config;
         try {
@@ -50,16 +58,14 @@ public class SwerveSubsystem extends SubsystemBase {
                     // optionally outputs individual module feedforwards
                     new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller
                             // for holonomic drive trains
-                            new PIDConstants(1.0, 0.0, 0.05), // Translation PID constants
-                            new PIDConstants(50.0, 0.0, 0.3) // Rotation PID constants
+                            new PIDConstants(2.7, 0.0, 0.2), // Translation PID constants
+                            new PIDConstants(34.0, 0.0, 0.5) // Rotation PID constants
                             ),
                     config, // The robot configuration
                     () -> {
                         // Boolean supplier that controls when the path will be mirrored for the red alliance
                         // This will flip the path being followed to the red side of the field.
                         // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-                        var alliance = DriverStation.getAlliance();
                         if (alliance.isPresent()) {
                             return alliance.get() == DriverStation.Alliance.Red;
                         }
@@ -70,13 +76,6 @@ public class SwerveSubsystem extends SubsystemBase {
         } catch (Exception e) {
             // Handle exception as needed
             e.printStackTrace();
-        }
-
-        var alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-            allianceBoolean = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceBoolean = false;
         }
     }
 
@@ -152,11 +151,18 @@ public class SwerveSubsystem extends SubsystemBase {
             }
             swerveDrive.drive(
                     new Translation2d(
-                            ((translationY * Math.sin(angle)) - (translationX * -Math.cos(angle)))
+                            -((translationY * Math.sin(angle)) - (translationX * -Math.cos(angle)))
                                     * swerveDrive.getMaximumChassisVelocity(),
-                            ((translationY * Math.cos(angle)) - (translationX * Math.sin(angle)))
+                            -((translationY * Math.cos(angle)) - (translationX * Math.sin(angle)))
                                     * swerveDrive.getMaximumChassisVelocity()),
-                    (-pose.getRotation().getRadians() - angle) * 1 * swerveDrive.getMaximumChassisAngularVelocity(),
+                    (MathUtil.clamp(
+                                    MathUtil.angleModulus(
+                                            -pose.getRotation().getRadians() - angle
+                                            // + Math.signum(translationY) * 0.2 / getDistanceFromHub()
+                                            ),
+                                    -1,
+                                    1)
+                            * swerveDrive.getMaximumChassisAngularVelocity()),
                     true,
                     false);
         }
@@ -198,6 +204,10 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public void driveRelative(ChassisSpeeds chassis) {
         swerveDrive.drive(chassis);
+    }
+
+    public double getDistanceFromHub() {
+        return getPose().getTranslation().getDistance((allianceBoolean == true) ? redHub : blueHub);
     }
 
     public Command alignCommand() {

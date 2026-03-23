@@ -18,12 +18,11 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final int INDEXER_CAN_ID = 21;
     private static final int SHOOTER_2_CAN_ID = 22;
 
-    private static final double kP = 1.75;
-    private static final double kI = 0.5;
-    private static final double kD = 0.1;
-    private static final double kV = 0; // Feed Forward
+    private static final double kS = 0.12;
+    private static final double kV = 0.4;
+    private static final double kA = 0.02;
 
-    private static double shooterSpeed = 0.83;
+    private static double shooterSpeed = 0.75;
 
     private static final double MAX_VELOCITY = 30;
     private static final double MAX_ACCELERATION = 40;
@@ -39,10 +38,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
         TalonFXConfiguration config = new TalonFXConfiguration();
 
-        config.Slot0.kP = kP;
-        config.Slot0.kI = kI;
-        config.Slot0.kD = kD;
+        config.Slot0.kS = kS;
         config.Slot0.kV = kV;
+        config.Slot0.kA = kA;
 
         config.MotionMagic.MotionMagicCruiseVelocity = MAX_VELOCITY;
         config.MotionMagic.MotionMagicAcceleration = MAX_ACCELERATION;
@@ -52,15 +50,12 @@ public class ShooterSubsystem extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimit = 40;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        
         shooterMotor.getConfigurator().apply(config);
         shooter2Motor.setControl(new Follower(SHOOTER_CAN_ID, MotorAlignmentValue.Opposed));
-        
 
-        config.Slot0.kP = 0.5;
-        config.Slot0.kI = 0;
-        config.Slot0.kD = 0.1;
-        config.Slot0.kV = 0.6;
+        config.Slot0.kS = 0.4;
+        config.Slot0.kV = 0.25;
+        config.Slot0.kA = 0.04;
 
         indexerMotor.getConfigurator().apply(config);
     }
@@ -81,6 +76,10 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor.set(0);
     }
 
+    public double getSetSpeed() {
+        return shooterSpeed;
+    }
+
     public void nudgeUp() {
         if (shooterSpeed < 1) {
             shooterSpeed += 0.01;
@@ -95,18 +94,21 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public Command shooterCommand() {
         return this.runOnce(() -> {
-                    spinShooter(shooterSpeed);
+                    spinShooter((shooterSpeed < 0.95) ? 0.05 + shooterSpeed : shooterSpeed);
                 })
                 .andThen(Commands.waitSeconds(0.7))
                 .andThen(this.runOnce(() -> {
-                    spinIndexer(shooterSpeed);
+                    spinIndexer(0.5 + 0.5 * shooterSpeed);
+                }))
+                .andThen(this.runOnce(() -> {
+                    spinShooter(shooterSpeed);
                 }));
     }
 
     public Command intakeCommand() {
         return this.runOnce(() -> {
             spinIndexer(-0.5);
-            spinShooter(0.7);
+            spinShooter(0.5);
         });
     }
 

@@ -4,8 +4,10 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -28,6 +30,7 @@ public class RobotContainer {
     private final ShooterSubsystem shooter;
     private final VisionSubsystem vision;
     private final ClimberSubsystem climber;
+    private final SendableChooser<Command> autoChooser;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController m_driverController =
@@ -50,6 +53,14 @@ public class RobotContainer {
 
         // Configure the trigger bindings
         configureBindings();
+
+        // Build an auto chooser. This will use Commands.none() as the default option.
+        autoChooser = AutoBuilder.buildAutoChooser();
+
+        // Another option that allows you to specify the default auto by its name
+        // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
+
+        SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
     /**
@@ -64,9 +75,10 @@ public class RobotContainer {
     private void configureBindings() {
         xbox.runIntake.onTrue(shooter.intakeCommand());
         xbox.runShooter.onTrue(shooter.shooterCommand());
-        xbox.stop.onTrue(shooter.stopCommand().andThen(swerve.stopAlignCommand()));
+        xbox.stop.onTrue(shooter.stopCommand());
         xbox.reset.onTrue(swerve.resetHeading());
-        xbox.align.onTrue(swerve.alignCommand());
+        xbox.align.toggleOnTrue(swerve.alignCommand());
+        xbox.align.toggleOnFalse(swerve.stopAlignCommand());
         xbox.dpadDown.onTrue(shooter.nudgeDownCommand());
         xbox.dpadUp.onTrue(shooter.nudgeUpCommand());
         xbox.climb.onTrue(climber.climbCommand());
@@ -80,6 +92,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return new PathPlannerAuto("ShootAuto");
+        return autoChooser.getSelected();
     }
 }
