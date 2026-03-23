@@ -17,10 +17,11 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final int SHOOTER_CAN_ID = 20;
     private static final int INDEXER_CAN_ID = 21;
     private static final int SHOOTER_2_CAN_ID = 22;
+    private static final int INTAKE_CAN_ID = 23;
 
     private static final double kS = 0.12;
-    private static final double kV = 0.4;
-    private static final double kA = 0.02;
+    private static final double kV = 0.15;
+    private static final double kA = 0.03;
 
     private static double shooterSpeed = 0.75;
 
@@ -30,11 +31,13 @@ public class ShooterSubsystem extends SubsystemBase {
     private final TalonFX indexerMotor;
     private final TalonFX shooterMotor;
     private final TalonFX shooter2Motor;
+    private final TalonFX intakeMotor;
 
     public ShooterSubsystem() {
         indexerMotor = new TalonFX(INDEXER_CAN_ID);
         shooterMotor = new TalonFX(SHOOTER_CAN_ID);
         shooter2Motor = new TalonFX(SHOOTER_2_CAN_ID);
+        intakeMotor = new TalonFX(INTAKE_CAN_ID);
 
         TalonFXConfiguration config = new TalonFXConfiguration();
 
@@ -47,17 +50,25 @@ public class ShooterSubsystem extends SubsystemBase {
 
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        config.CurrentLimits.SupplyCurrentLimit = 40;
+        config.CurrentLimits.SupplyCurrentLimit = 60;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         shooterMotor.getConfigurator().apply(config);
         shooter2Motor.setControl(new Follower(SHOOTER_CAN_ID, MotorAlignmentValue.Opposed));
 
-        config.Slot0.kS = 0.4;
-        config.Slot0.kV = 0.25;
-        config.Slot0.kA = 0.04;
+        config.Slot0.kS = 0.12;
+        config.Slot0.kV = 0.15;
+        config.Slot0.kA = 0.03;
+        config.CurrentLimits.SupplyCurrentLimit = 40;
 
         indexerMotor.getConfigurator().apply(config);
+        intakeMotor.getConfigurator().apply(config);
+    }
+
+    public double shootFunction(double distance) {
+        return 0.35
+                * Math.sqrt(
+                        Math.tan(1.13446) / (distance - 0.5171) - 1.8288 / ((distance - 0.5171) * (distance - 0.5171)));
     }
 
     public void spinIndexer(double value) {
@@ -74,6 +85,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void stopShooter() {
         shooterMotor.set(0);
+    }
+
+    public void spinIntake(double value) {
+        intakeMotor.set(-value);
+    }
+
+    public void stopIntake() {
+        intakeMotor.set(0);
     }
 
     public double getSetSpeed() {
@@ -94,21 +113,22 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public Command shooterCommand() {
         return this.runOnce(() -> {
-                    spinShooter((shooterSpeed < 0.95) ? 0.05 + shooterSpeed : shooterSpeed);
+                    stopIntake();
+                    spinShooter(shooterSpeed);
                 })
-                .andThen(Commands.waitSeconds(0.7))
+                .andThen(Commands.waitSeconds(0.5))
                 .andThen(this.runOnce(() -> {
                     spinIndexer(0.5 + 0.5 * shooterSpeed);
-                }))
-                .andThen(this.runOnce(() -> {
                     spinShooter(shooterSpeed);
+                    spinIntake(shooterSpeed);
                 }));
     }
 
     public Command intakeCommand() {
         return this.runOnce(() -> {
+            stopShooter();
             spinIndexer(-0.5);
-            spinShooter(0.5);
+            spinIntake(0.5);
         });
     }
 
@@ -116,6 +136,7 @@ public class ShooterSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             stopIndexer();
             stopShooter();
+            stopIntake();
         });
     }
 

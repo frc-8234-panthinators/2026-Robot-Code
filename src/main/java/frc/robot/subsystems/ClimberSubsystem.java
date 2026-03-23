@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /** Add your docs here. */
 public class ClimberSubsystem extends SubsystemBase {
-    private static final int CLIMBER_CAN_ID = 23;
+    private static final int CLIMBER_CAN_ID = 24;
 
     private static final double kP = 0.5;
     private static final double kI = 0.0;
