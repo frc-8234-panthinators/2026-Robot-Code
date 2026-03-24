@@ -46,7 +46,7 @@ public class RobotContainer {
 
         NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
         NamedCommands.registerCommand("Intake", shooter.intakeCommand());
-        NamedCommands.registerCommand("Shoot", shooter.shooterCommand());
+        NamedCommands.registerCommand("Shoot", shooter.shooterCommand(swerve.getDistanceFromHub()));
         NamedCommands.registerCommand("StopShooter", shooter.stopCommand());
         NamedCommands.registerCommand("Align", swerve.alignCommand());
         NamedCommands.registerCommand("Climb", climber.climbCommand());
@@ -74,7 +74,7 @@ public class RobotContainer {
      */
     private void configureBindings() {
         xbox.runIntake.onTrue(shooter.intakeCommand());
-        xbox.runShooter.onTrue(shooter.shooterCommand());
+        xbox.runShooter.onTrue(shooter.shooterCommand(swerve.getDistanceFromHub()));
         xbox.stop.onTrue(shooter.stopCommand());
         xbox.reset.onTrue(swerve.resetHeading());
         xbox.align.toggleOnTrue(swerve.alignCommand());

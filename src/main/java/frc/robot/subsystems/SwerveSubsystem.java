@@ -30,8 +30,8 @@ public class SwerveSubsystem extends SubsystemBase {
     private boolean align;
     private boolean allianceBoolean = true; // TRUE = RED, FALSE = BLUE
 
-    private final Translation2d redHub = new Translation2d(Units.inchesToMeters(492.6), Units.inchesToMeters(162.15));
-    private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(158.6), Units.inchesToMeters(162.15));
+    private final Translation2d redHub = new Translation2d(Units.inchesToMeters(488.6), Units.inchesToMeters(158.85));
+    private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(158.6), Units.inchesToMeters(158.85));
 
     public SwerveSubsystem() {
         double maximumSpeed = Units.feetToMeters(17.4);

@@ -23,6 +23,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double kV = 0.15;
     private static final double kA = 0.03;
 
+    private static boolean distanceShoot = true;
+
     private static double shooterSpeed = 0.75;
 
     private static final double MAX_VELOCITY = 30;
@@ -66,9 +68,8 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public double shootFunction(double distance) {
-        return 0.35
-                * Math.sqrt(
-                        Math.tan(1.13446) / (distance - 0.5171) - 1.8288 / ((distance - 0.5171) * (distance - 0.5171)));
+        double adjustedDist = distance - 0.5171;
+        return 0.6 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
     }
 
     public void spinIndexer(double value) {
@@ -100,24 +101,27 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void nudgeUp() {
+        distanceShoot = false;
         if (shooterSpeed < 1) {
             shooterSpeed += 0.01;
         }
     }
 
     public void nudgeDown() {
+        distanceShoot = false;
         if (shooterSpeed > 0) {
             shooterSpeed -= 0.01;
         }
     }
 
-    public Command shooterCommand() {
+    public Command shooterCommand(double distance) {
         return this.runOnce(() -> {
                     stopIntake();
                     spinShooter(shooterSpeed);
                 })
                 .andThen(Commands.waitSeconds(0.5))
                 .andThen(this.runOnce(() -> {
+                    shooterSpeed = (distanceShoot) ? shootFunction(distance) : shooterSpeed;
                     spinIndexer(0.5 + 0.5 * shooterSpeed);
                     spinShooter(shooterSpeed);
                     spinIntake(shooterSpeed);
@@ -127,8 +131,8 @@ public class ShooterSubsystem extends SubsystemBase {
     public Command intakeCommand() {
         return this.runOnce(() -> {
             stopShooter();
-            spinIndexer(-0.5);
-            spinIntake(0.5);
+            // spinIndexer(-0.5);
+            spinIntake(1);
         });
     }
 
