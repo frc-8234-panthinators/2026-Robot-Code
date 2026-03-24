@@ -67,10 +67,10 @@ public class ShooterSubsystem extends SubsystemBase {
         intakeMotor.getConfigurator().apply(config);
     }
 
-    public double shootFunction(double distance) {
-        double adjustedDist = distance - 0.5171;
-        return 0.6 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
-    }
+    // public double shootFunction(double distance) {
+    //     double adjustedDist = distance - 0.5171;
+    //     return 0.6 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
+    // }
 
     public void spinIndexer(double value) {
         indexerMotor.set(value);
@@ -114,14 +114,14 @@ public class ShooterSubsystem extends SubsystemBase {
         }
     }
 
-    public Command shooterCommand(double distance) {
+    public Command shooterCommand() {
         return this.runOnce(() -> {
                     stopIntake();
                     spinShooter(shooterSpeed);
                 })
                 .andThen(Commands.waitSeconds(0.5))
                 .andThen(this.runOnce(() -> {
-                    shooterSpeed = (distanceShoot) ? shootFunction(distance) : shooterSpeed;
+                    // shooterSpeed = (distanceShoot) ? shootFunction(distance) : shooterSpeed;
                     spinIndexer(0.5 + 0.5 * shooterSpeed);
                     spinShooter(shooterSpeed);
                     spinIntake(shooterSpeed);
@@ -131,8 +131,7 @@ public class ShooterSubsystem extends SubsystemBase {
     public Command intakeCommand() {
         return this.runOnce(() -> {
             stopShooter();
-            // spinIndexer(-0.5);
-            spinIntake(1);
+            spinIndexer(-0.5);
         });
     }
 
