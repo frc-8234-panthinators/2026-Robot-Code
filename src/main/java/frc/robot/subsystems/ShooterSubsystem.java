@@ -132,6 +132,7 @@ public class ShooterSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             stopShooter();
             spinIndexer(-0.5);
+            spinIntake(0.5);
         });
     }
 
