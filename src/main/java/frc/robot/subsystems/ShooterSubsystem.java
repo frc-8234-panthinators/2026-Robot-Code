@@ -69,6 +69,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public double shootFunction(double distance) {
         double adjustedDist = distance - 0.5171;
+        if (distance > 3){
+            return shooterSpeed;
+        }
         return 0.6 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
     }
 
@@ -131,8 +134,8 @@ public class ShooterSubsystem extends SubsystemBase {
     public Command intakeCommand() {
         return this.runOnce(() -> {
             stopShooter();
-            // spinIndexer(-0.5);
-            spinIntake(1);
+            spinIndexer(-0.5);
+            spinIntake(0.5);
         });
     }
 

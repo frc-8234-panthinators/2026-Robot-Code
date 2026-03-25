@@ -17,6 +17,7 @@ public class XBoxContainer {
 
     public Trigger dpadDown = new Trigger(() -> controller.getPOV() == 180);
     public Trigger dpadUp = new Trigger(() -> controller.getPOV() == 0);
+    public Trigger dpadLeft = new Trigger(() -> controller.getPOV() == 90);
 
     public boolean getControllerXButton() {
         return (controller.getLeftStickButton());

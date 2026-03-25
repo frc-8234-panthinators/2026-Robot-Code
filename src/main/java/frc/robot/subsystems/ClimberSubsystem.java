@@ -62,11 +62,11 @@ public class ClimberSubsystem extends SubsystemBase {
 
     public Command climbCommand() {
         return runOnce(() -> {
-                    climb(50.0);
+                    climb(200.0);
                 })
-                .andThen(Commands.waitSeconds(0.5))
+                .andThen(Commands.waitSeconds(3))
                 .andThen(run(() -> {
-                    climb(-25.0);
+                    climb(-100.0);
                 }));
     }
 
