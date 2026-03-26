@@ -43,7 +43,7 @@ public class ClimberSubsystem extends SubsystemBase {
         config.MotionMagic.MotionMagicCruiseVelocity = MAX_VELOCITY;
         config.MotionMagic.MotionMagicAcceleration = MAX_ACCELERATION;
 
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         config.CurrentLimits.SupplyCurrentLimit = 40;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -73,6 +73,18 @@ public class ClimberSubsystem extends SubsystemBase {
     public Command neutralCommand() {
         return runOnce(() -> {
             climb(0.0);
+        });
+    }
+
+    public Command slightFCommand() {
+        return runOnce(() -> {
+            climb(getPosition() + 20.0);
+        });
+    }
+
+    public Command slightBCommand() {
+        return runOnce(() -> {
+            climb(getPosition() - 20.0);
         });
     }
 

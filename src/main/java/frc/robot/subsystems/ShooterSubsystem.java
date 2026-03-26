@@ -23,9 +23,9 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double kV = 0.15;
     private static final double kA = 0.03;
 
-    private static boolean distanceShoot = true;
+    private static boolean distanceShoot = false;
 
-    private static double shooterSpeed = 0.75;
+    private static double shooterSpeed = 0.81;
 
     private static final double MAX_VELOCITY = 30;
     private static final double MAX_ACCELERATION = 40;
@@ -68,11 +68,21 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public double shootFunction(double distance) {
-        double adjustedDist = distance - 0.5171;
-        if (distance > 3){
-            return shooterSpeed;
+        // double adjustedDist = distance - 0.5171;
+        // return 0.7 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
+        if (distance < 2.60) {
+            return ((2.60 - 2.34) / (0.84 - 0.81)) * (distance - 2.60) + 0.74;
         }
-        return 0.6 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
+        if (distance < 2.96) {
+            return ((2.96 - 2.60) / (0.905 - 0.84)) * (distance - 2.96) + 0.805;
+        }
+        if (distance < 3.45) {
+            return ((3.45 - 2.96) / (0.925 - 0.905)) * (distance - 3.45) + 0.825;
+        }
+        if (distance < 3.79) {
+            return ((3.79 - 3.45) / (0.95 - 0.925)) * (distance - 3.79) + 0.85;
+        }
+        return ((3.92 - 3.79) / (0.97 - 0.95)) * (distance - 3.92) + 0.87;
     }
 
     public void spinIndexer(double value) {
@@ -104,14 +114,12 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void nudgeUp() {
-        distanceShoot = false;
         if (shooterSpeed < 1) {
             shooterSpeed += 0.01;
         }
     }
 
     public void nudgeDown() {
-        distanceShoot = false;
         if (shooterSpeed > 0) {
             shooterSpeed -= 0.01;
         }
@@ -124,11 +132,17 @@ public class ShooterSubsystem extends SubsystemBase {
                 })
                 .andThen(Commands.waitSeconds(0.5))
                 .andThen(this.runOnce(() -> {
-                    shooterSpeed = (distanceShoot) ? shootFunction(distance) : shooterSpeed;
-                    spinIndexer(0.5 + 0.5 * shooterSpeed);
-                    spinShooter(shooterSpeed);
-                    spinIntake(shooterSpeed);
+                    double speed = (distanceShoot) ? shootFunction(distance) : shooterSpeed;
+                    spinIndexer(0.5 + 0.5 * speed);
+                    spinShooter(speed);
+                    spinIntake(0.5 + 0.5 * speed);
                 }));
+    }
+
+    public Command switchShootType() {
+        return this.runOnce(() -> {
+            distanceShoot = !distanceShoot;
+        });
     }
 
     public Command intakeCommand() {

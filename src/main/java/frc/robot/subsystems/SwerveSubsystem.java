@@ -12,7 +12,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -22,27 +21,18 @@ import org.littletonrobotics.junction.Logger;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
-import swervelib.telemetry.SwerveDriveTelemetry;
-import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
     private boolean align;
     private boolean allianceBoolean = true; // TRUE = RED, FALSE = BLUE
 
-    private final Translation2d redHub = new Translation2d(Units.inchesToMeters(488.6), Units.inchesToMeters(158.85));
-    private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(158.6), Units.inchesToMeters(158.85));
+    private final Translation2d redHub = new Translation2d(Units.inchesToMeters(469.11), Units.inchesToMeters(158.85));
+    private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(182.11), Units.inchesToMeters(158.85));
 
     public SwerveSubsystem() {
         double maximumSpeed = Units.feetToMeters(17.4);
-        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
-
-        var alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-            allianceBoolean = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceBoolean = false;
-        }
+        // SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         RobotConfig config;
         try {
@@ -62,14 +52,17 @@ public class SwerveSubsystem extends SubsystemBase {
                             new PIDConstants(0.03, 0.0, 0.002) // Rotation PID constants
                             ),
                     config, // The robot configuration
+                    // () -> {
+                    //     // Boolean supplier that controls when the path will be mirrored for the red alliance
+                    //     // This will flip the path being followed to the red side of the field.
+                    //     // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+                    //     if (alliance.isPresent()) {
+                    //         return alliance.get() == DriverStation.Alliance.Red;
+                    //     }
+                    //     return false;
+                    // },
                     () -> {
-                        // Boolean supplier that controls when the path will be mirrored for the red alliance
-                        // This will flip the path being followed to the red side of the field.
-                        // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-                        if (alliance.isPresent()) {
-                            return alliance.get() == DriverStation.Alliance.Red;
-                        }
-                        return false;
+                        return allianceBoolean;
                     },
                     this // Reference to this subsystem to set requirements
                     );
@@ -140,20 +133,25 @@ public class SwerveSubsystem extends SubsystemBase {
         } else {
             Pose2d pose = getPose();
             double angle;
+            double driveDirect;
             if (allianceBoolean) {
+                driveDirect = -1;
                 angle = Math.atan2(
                         (pose.getTranslation().getY() - redHub.getY()),
                         (redHub.getX() - pose.getTranslation().getX()));
             } else {
+                driveDirect = 1;
                 angle = Math.atan2(
                         (pose.getTranslation().getY() - blueHub.getY()),
                         (blueHub.getX() - pose.getTranslation().getX()));
             }
             swerveDrive.drive(
                     new Translation2d(
-                            -((translationY * Math.sin(angle)) - (translationX * -Math.cos(angle)))
+                            driveDirect
+                                    * ((translationY * Math.sin(angle)) - (translationX * -Math.cos(angle)))
                                     * swerveDrive.getMaximumChassisVelocity(),
-                            -((translationY * Math.cos(angle)) - (translationX * Math.sin(angle)))
+                            driveDirect
+                                    * ((translationY * Math.cos(angle)) - (translationX * Math.sin(angle)))
                                     * swerveDrive.getMaximumChassisVelocity()),
                     (MathUtil.clamp(
                                     MathUtil.angleModulus(
@@ -184,6 +182,10 @@ public class SwerveSubsystem extends SubsystemBase {
         return swerveDrive.getPose();
     }
 
+    public boolean getAllanceBoolean(){
+        return allianceBoolean;
+    }
+
     public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs) {
         swerveDrive.addVisionMeasurement(pose, timestamp, stdDevs);
     }
@@ -196,6 +198,10 @@ public class SwerveSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             swerveDrive.zeroGyro();
         });
+    }
+
+    public void quickFixAlliance(boolean alliance) {
+        allianceBoolean = alliance;
     }
 
     public ChassisSpeeds getRobotVelocity() {

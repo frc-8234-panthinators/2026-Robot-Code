@@ -75,6 +75,9 @@ public class RobotContainer {
     private void configureBindings() {
         xbox.runIntake.onTrue(shooter.intakeCommand());
         xbox.runShooter.onTrue(shooter.shooterCommand(swerve.getDistanceFromHub()));
+        xbox.distShoot.toggleOnTrue(
+                shooter.switchShootType().andThen(shooter.shooterCommand(swerve.getDistanceFromHub())));
+        xbox.distShoot.toggleOnFalse(shooter.switchShootType());
         xbox.stop.onTrue(shooter.stopCommand());
         xbox.reset.onTrue(swerve.resetHeading());
         xbox.align.toggleOnTrue(swerve.alignCommand());

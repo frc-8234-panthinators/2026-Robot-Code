@@ -81,13 +81,6 @@ public class Robot extends LoggedRobot {
         m_robotContainer = new RobotContainer(swerve, vision, xbox);
         CanandEventLoop.getInstance();
 
-        var alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
-        } else {
-            allianceOffset = -1;
-        }
-
         m_led = new AddressableLED(0);
 
         // Reuse buffer
@@ -123,9 +116,11 @@ public class Robot extends LoggedRobot {
         // Correct pose estimate with vision measurements
         vision.periodic(swerve);
         Logger.recordOutput("RobotPose", swerve.getPose());
-        Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
+        // Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
         Logger.recordOutput("DistanceFromHub", swerve.getDistanceFromHub());
         Logger.recordOutput("ShooterSetSpeed", shooter.getSetSpeed());
+        Logger.recordOutput("allianceBoolean", swerve.getAllanceBoolean());
+        // Logger.recordOutput("EstimatedShooterSpeed", shooter.shootFunction(swerve.getDistanceFromHub()));
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -138,6 +133,16 @@ public class Robot extends LoggedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
+        var alliance = DriverStation.getAlliance();
+        boolean quickFixBool;
+        if (alliance.isPresent()) {
+            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
+            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
+        } else {
+            allianceOffset = -1;
+            quickFixBool = false;
+        }
+        swerve.quickFixAlliance(quickFixBool);
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
         Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
 
