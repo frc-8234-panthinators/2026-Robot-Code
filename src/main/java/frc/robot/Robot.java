@@ -119,7 +119,7 @@ public class Robot extends LoggedRobot {
         // Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
         Logger.recordOutput("DistanceFromHub", swerve.getDistanceFromHub());
         Logger.recordOutput("ShooterSetSpeed", shooter.getSetSpeed());
-        Logger.recordOutput("allianceBoolean", swerve.getAllanceBoolean());
+        Logger.recordOutput("allianceBoolean", swerve.getAllianceBoolean());
         // Logger.recordOutput("EstimatedShooterSpeed", shooter.shootFunction(swerve.getDistanceFromHub()));
     }
 

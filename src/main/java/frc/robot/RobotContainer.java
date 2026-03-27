@@ -44,7 +44,7 @@ public class RobotContainer {
         this.swerve = swerve;
         this.vision = vision;
 
-        NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
+        // NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
         NamedCommands.registerCommand("Intake", shooter.intakeCommand());
         NamedCommands.registerCommand("Shoot", shooter.shooterCommand(swerve.getDistanceFromHub()));
         NamedCommands.registerCommand("StopShooter", shooter.stopCommand());
@@ -78,8 +78,8 @@ public class RobotContainer {
         xbox.distShoot.toggleOnTrue(
                 shooter.switchShootType().andThen(shooter.shooterCommand(swerve.getDistanceFromHub())));
         xbox.distShoot.toggleOnFalse(shooter.switchShootType());
-        xbox.stop.onTrue(shooter.stopCommand());
-        xbox.reset.onTrue(swerve.resetHeading());
+        xbox.stopShooter.onTrue(shooter.stopCommand());
+        // xbox.reset.onTrue(swerve.resetHeading());
         xbox.align.toggleOnTrue(swerve.alignCommand());
         xbox.align.toggleOnFalse(swerve.stopAlignCommand());
         xbox.dpadDown.onTrue(shooter.nudgeDownCommand());

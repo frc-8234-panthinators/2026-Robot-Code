@@ -19,6 +19,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final int SHOOTER_2_CAN_ID = 22;
     private static final int INTAKE_CAN_ID = 23;
 
+    private static final double[][] pairsForDist = {{2.24, 0.75}, {2.43, 0.77}, {2.93, 0.813}};
+
     private static final double kS = 0.12;
     private static final double kV = 0.15;
     private static final double kA = 0.03;
@@ -70,19 +72,31 @@ public class ShooterSubsystem extends SubsystemBase {
     public double shootFunction(double distance) {
         // double adjustedDist = distance - 0.5171;
         // return 0.7 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
-        if (distance < 2.60) {
-            return ((2.60 - 2.34) / (0.84 - 0.81)) * (distance - 2.60) + 0.74;
+        // if (distance < 2.60) {
+        //     return ((2.60 - 2.34) / (0.84 - 0.81)) * (distance - 2.60) + 0.74;
+        // }
+        // if (distance < 2.96) {
+        //     return ((2.96 - 2.60) / (0.905 - 0.84)) * (distance - 2.96) + 0.805;
+        // }
+        // if (distance < 3.45) {
+        //     return ((3.45 - 2.96) / (0.925 - 0.905)) * (distance - 3.45) + 0.825;
+        // }
+        // if (distance < 3.79) {
+        //     return ((3.79 - 3.45) / (0.95 - 0.925)) * (distance - 3.79) + 0.85;
+        // }
+        // return ((3.92 - 3.79) / (0.97 - 0.95)) * (distance - 3.92) + 0.87;
+
+        for (int i = 1; i < pairsForDist.length; i++) {
+            if (distance < pairsForDist[i][0]) {
+                return ((pairsForDist[i][1] - pairsForDist[i - 1][1]) / (pairsForDist[i][0] - pairsForDist[i - 1][0]))
+                                * (distance - pairsForDist[i][0])
+                        + pairsForDist[i][1];
+            }
         }
-        if (distance < 2.96) {
-            return ((2.96 - 2.60) / (0.905 - 0.84)) * (distance - 2.96) + 0.805;
-        }
-        if (distance < 3.45) {
-            return ((3.45 - 2.96) / (0.925 - 0.905)) * (distance - 3.45) + 0.825;
-        }
-        if (distance < 3.79) {
-            return ((3.79 - 3.45) / (0.95 - 0.925)) * (distance - 3.79) + 0.85;
-        }
-        return ((3.92 - 3.79) / (0.97 - 0.95)) * (distance - 3.92) + 0.87;
+        return ((pairsForDist[pairsForDist.length - 1][1] - pairsForDist[pairsForDist.length - 2][1])
+                                / (pairsForDist[pairsForDist.length - 1][0] - pairsForDist[pairsForDist.length - 2][0]))
+                        * (distance - pairsForDist[pairsForDist.length - 1][0])
+                + pairsForDist[pairsForDist.length - 1][1];
     }
 
     public void spinIndexer(double value) {

@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -39,6 +40,7 @@ public class SwerveSubsystem extends SubsystemBase {
             File swerveJsonDirectory = new File(Filesystem.getDeployDirectory(), "swerve");
             swerveDrive = new SwerveParser(swerveJsonDirectory).createSwerveDrive(maximumSpeed);
             config = RobotConfig.fromGUISettings();
+            var alliance = DriverStation.getAlliance();
             AutoBuilder.configure(
                     this::getPose, // Robot pose supplier
                     this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
@@ -52,17 +54,14 @@ public class SwerveSubsystem extends SubsystemBase {
                             new PIDConstants(0.03, 0.0, 0.002) // Rotation PID constants
                             ),
                     config, // The robot configuration
-                    // () -> {
-                    //     // Boolean supplier that controls when the path will be mirrored for the red alliance
-                    //     // This will flip the path being followed to the red side of the field.
-                    //     // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-                    //     if (alliance.isPresent()) {
-                    //         return alliance.get() == DriverStation.Alliance.Red;
-                    //     }
-                    //     return false;
-                    // },
                     () -> {
-                        return allianceBoolean;
+                        // Boolean supplier that controls when the path will be mirrored for the red alliance
+                        // This will flip the path being followed to the red side of the field.
+                        // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+                        if (alliance.isPresent()) {
+                            return alliance.get() == DriverStation.Alliance.Red;
+                        }
+                        return false;
                     },
                     this // Reference to this subsystem to set requirements
                     );
@@ -158,8 +157,8 @@ public class SwerveSubsystem extends SubsystemBase {
                                             -pose.getRotation().getRadians() - angle
                                             // + Math.signum(translationY) * 0.2 / getDistanceFromHub()
                                             ),
-                                    -1,
-                                    1)
+                                    -0.6,
+                                    0.6)
                             * swerveDrive.getMaximumChassisAngularVelocity()),
                     true,
                     false);
@@ -182,7 +181,7 @@ public class SwerveSubsystem extends SubsystemBase {
         return swerveDrive.getPose();
     }
 
-    public boolean getAllanceBoolean(){
+    public boolean getAllianceBoolean() {
         return allianceBoolean;
     }
 
@@ -194,11 +193,12 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.resetOdometry(pose);
     }
 
-    public Command resetHeading() {
-        return this.runOnce(() -> {
-            swerveDrive.zeroGyro();
-        });
-    }
+    // This makes controls unusable / unpredictable
+    // public Command resetHeading() {
+    //     return this.runOnce(() -> {
+    //         swerveDrive.zeroGyro();
+    //     });
+    // }
 
     public void quickFixAlliance(boolean alliance) {
         allianceBoolean = alliance;
@@ -227,4 +227,12 @@ public class SwerveSubsystem extends SubsystemBase {
             align = false;
         });
     }
+
+    // public Command distanceTestCommand(){
+    //     return alignCommand()
+    //             .andThen(Commands.waitSeconds(0.5))
+    //             .andThen(run(() -> drive(-0.03, 0, 0, true)).withTimeout(0.5))
+    //             .andThen(stopAlignCommand());
+    // }
+
 }
