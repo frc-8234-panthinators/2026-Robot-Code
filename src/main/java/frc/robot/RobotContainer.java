@@ -79,7 +79,7 @@ public class RobotContainer {
                 shooter.switchShootType().andThen(shooter.shooterCommand(swerve.getDistanceFromHub())));
         xbox.distShoot.toggleOnFalse(shooter.switchShootType());
         xbox.stopShooter.onTrue(shooter.stopCommand());
-        // xbox.reset.onTrue(swerve.resetHeading());
+        xbox.dpadLeft.onTrue(swerve.resetHeading());
         xbox.align.toggleOnTrue(swerve.alignCommand());
         xbox.align.toggleOnFalse(swerve.stopAlignCommand());
         xbox.dpadDown.onTrue(shooter.nudgeDownCommand());

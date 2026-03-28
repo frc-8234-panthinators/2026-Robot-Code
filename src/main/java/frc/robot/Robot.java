@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -49,6 +50,9 @@ public class Robot extends LoggedRobot {
     // of 1 meter per second.
     private final LEDPattern m_scrollingRainbow =
             m_rainbow.scrollAtAbsoluteSpeed(MetersPerSecond.of(0.01), kLedSpacing);
+
+    private final LEDPattern m_greenPattern = LEDPattern.solid(new Color(0, 255, 0));
+    private final LEDPattern m_redPattern = LEDPattern.solid(new Color(255, 0, 0));
 
     private final RobotContainer m_robotContainer;
 
@@ -103,8 +107,17 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotPeriodic() {
-        // Update the buffer with the rainbow animation
-        m_scrollingRainbow.applyTo(m_ledBuffer);
+        //NOTE: Red & green are swapped because the LEDs are weird.
+        if (swerve.getAlign()) {
+            if (swerve.getDistanceFromHub() >= 2.0) {
+                m_redPattern.applyTo(m_ledBuffer);
+            } else {
+                m_greenPattern.applyTo(m_ledBuffer);
+            }
+        } else {
+            // Update the buffer with the rainbow animation
+            m_scrollingRainbow.applyTo(m_ledBuffer);
+        }
         // Set the LEDs
         m_led.setData(m_ledBuffer);
         // Runs athe Scheduler.  This is responsible for polling buttons, adding newly-scheduled
@@ -116,11 +129,11 @@ public class Robot extends LoggedRobot {
         // Correct pose estimate with vision measurements
         vision.periodic(swerve);
         Logger.recordOutput("RobotPose", swerve.getPose());
-        // Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
+        Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
         Logger.recordOutput("DistanceFromHub", swerve.getDistanceFromHub());
         Logger.recordOutput("ShooterSetSpeed", shooter.getSetSpeed());
         Logger.recordOutput("allianceBoolean", swerve.getAllianceBoolean());
-        // Logger.recordOutput("EstimatedShooterSpeed", shooter.shootFunction(swerve.getDistanceFromHub()));
+        Logger.recordOutput("EstimatedShooterSpeed", shooter.shootFunction(swerve.getDistanceFromHub()));
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -159,6 +172,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
+        shooter.switchShootType();
         // This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
@@ -171,7 +185,6 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-
         swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), true);
     }
 

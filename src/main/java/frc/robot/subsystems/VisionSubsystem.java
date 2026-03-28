@@ -15,6 +15,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
@@ -129,12 +130,37 @@ public class VisionSubsystem extends SubsystemBase {
     public void periodic(SwerveSubsystem swerve) {
         var results = rightCam.getAllUnreadResults();
         for (PhotonPipelineResult result : results) {
-            var visionRightEst = rightCamEstimator.estimateCoprocMultiTagPose(result);
+            List<PhotonTrackedTarget> targets = result.getTargets();
+            List<PhotonTrackedTarget> newTargets = new ArrayList<PhotonTrackedTarget>();
+            for (PhotonTrackedTarget target : targets) {
+                //
+                if ((target.getFiducialId() == 2)
+                        || (target.getFiducialId() == 3)
+                        || (target.getFiducialId() == 4)
+                        || (target.getFiducialId() == 5)
+                        || (target.getFiducialId() == 8)
+                        || (target.getFiducialId() == 9)
+                        || (target.getFiducialId() == 10)
+                        || (target.getFiducialId() == 11)
+                        || (target.getFiducialId() == 18)
+                        || (target.getFiducialId() == 19)
+                        || (target.getFiducialId() == 20)
+                        || (target.getFiducialId() == 21)
+                        || (target.getFiducialId() == 24)
+                        || (target.getFiducialId() == 25)
+                        || (target.getFiducialId() == 26)
+                        || (target.getFiducialId() == 27)) {
+                    newTargets.add(target);
+                }
+            }
+            PhotonPipelineResult newResult =
+                    new PhotonPipelineResult(result.metadata, newTargets, result.multitagResult);
+            var visionRightEst = rightCamEstimator.estimateCoprocMultiTagPose(newResult);
 
             if (visionRightEst.isEmpty()) {
-                visionRightEst = rightCamEstimator.estimateLowestAmbiguityPose(result);
+                visionRightEst = rightCamEstimator.estimateLowestAmbiguityPose(newResult);
             }
-            updateEstimationStdDevs(visionRightEst, result.getTargets());
+            updateEstimationStdDevs(visionRightEst, newResult.getTargets());
 
             if (Robot.isSimulation()) {
                 visionRightEst.ifPresentOrElse(

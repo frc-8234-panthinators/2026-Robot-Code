@@ -27,7 +27,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private static boolean distanceShoot = false;
 
-    private static double shooterSpeed = 0.81;
+    private static double shooterSpeed = 0.83;
 
     private static final double MAX_VELOCITY = 30;
     private static final double MAX_ACCELERATION = 40;
@@ -147,7 +147,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 .andThen(Commands.waitSeconds(0.5))
                 .andThen(this.runOnce(() -> {
                     double speed = (distanceShoot) ? shootFunction(distance) : shooterSpeed;
-                    spinIndexer(0.5 + 0.5 * speed);
+                    spinIndexer(0.7 + 0.3 * speed);
                     spinShooter(speed);
                     spinIntake(0.5 + 0.5 * speed);
                 }));

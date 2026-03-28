@@ -25,7 +25,7 @@ import swervelib.parser.SwerveParser;
 
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
-    private boolean align;
+    private boolean align = false;
     private boolean allianceBoolean = true; // TRUE = RED, FALSE = BLUE
 
     private final Translation2d redHub = new Translation2d(Units.inchesToMeters(469.11), Units.inchesToMeters(158.85));
@@ -165,13 +165,13 @@ public class SwerveSubsystem extends SubsystemBase {
         }
     }
 
-    /*public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
-        swerveDrive.drive(
-                translation,
-                rotation,
-                fieldRelative,
-                false); // Open loop is disabled since it shouldn't be used most of the time.
-    }*/
+    // public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
+    //     swerveDrive.drive(
+    //             translation,
+    //             rotation,
+    //             fieldRelative,
+    //             false); // Open loop is disabled since it shouldn't be used most of the time.
+    // }
 
     public Pose2d getSimulationDriveTrainPose() {
         return swerveDrive.getSimulationDriveTrainPose().get();
@@ -194,11 +194,11 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     // This makes controls unusable / unpredictable
-    // public Command resetHeading() {
-    //     return this.runOnce(() -> {
-    //         swerveDrive.zeroGyro();
-    //     });
-    // }
+    public Command resetHeading() {
+        return this.runOnce(() -> {
+            swerveDrive.zeroGyro();
+        });
+    }
 
     public void quickFixAlliance(boolean alliance) {
         allianceBoolean = alliance;
@@ -226,6 +226,10 @@ public class SwerveSubsystem extends SubsystemBase {
         return runOnce(() -> {
             align = false;
         });
+    }
+
+    public boolean getAlign() {
+        return align;
     }
 
     // public Command distanceTestCommand(){
