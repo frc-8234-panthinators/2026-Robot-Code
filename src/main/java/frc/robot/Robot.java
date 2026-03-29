@@ -10,6 +10,10 @@ import com.reduxrobotics.canand.CanandEventLoop;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
@@ -40,6 +44,8 @@ public class Robot extends LoggedRobot {
     private int allianceOffset = 1;
     private AddressableLED m_led;
     private AddressableLEDBuffer m_ledBuffer;
+    private final StringSubscriber nameSub;
+    private String autoString;
 
     private final LEDPattern m_rainbow = LEDPattern.rainbow(255, 255);
 
@@ -96,6 +102,9 @@ public class Robot extends LoggedRobot {
         // Set the data
         m_led.setData(m_ledBuffer);
         m_led.start();
+
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard/Auto Chooser");
+        nameSub = table.getStringTopic("active").subscribe("");
     }
 
     /**
@@ -125,20 +134,29 @@ public class Robot extends LoggedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+        
 
         // Correct pose estimate with vision measurements
         vision.periodic(swerve);
+
+
+        
         Logger.recordOutput("RobotPose", swerve.getPose());
         Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
         Logger.recordOutput("DistanceFromHub", swerve.getDistanceFromHub());
         Logger.recordOutput("ShooterSetSpeed", shooter.getSetSpeed());
         Logger.recordOutput("allianceBoolean", swerve.getAllianceBoolean());
         Logger.recordOutput("EstimatedShooterSpeed", shooter.shootFunction(swerve.getDistanceFromHub()));
+
+        autoString = nameSub.get(); 
+        Logger.recordOutput("AutoNameFromTables", autoString); //DO NOT COMMENT OUT
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        shooter.stopCommand();
+    }
 
     @Override
     public void disabledPeriodic() {}
@@ -156,7 +174,7 @@ public class Robot extends LoggedRobot {
             quickFixBool = false;
         }
         swerve.quickFixAlliance(quickFixBool);
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand(autoString);
         Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
 
         // schedule the autonomous command (example)

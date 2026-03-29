@@ -4,8 +4,20 @@
 
 package frc.robot;
 
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.List;
+
+import org.littletonrobotics.junction.Logger;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,6 +43,7 @@ public class RobotContainer {
     private final VisionSubsystem vision;
     private final ClimberSubsystem climber;
     private final SendableChooser<Command> autoChooser;
+    private boolean pathfindAtStart = true;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController m_driverController =
@@ -60,7 +73,11 @@ public class RobotContainer {
         // Another option that allows you to specify the default auto by its name
         // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
 
+
+
         SmartDashboard.putData("Auto Chooser", autoChooser);
+        SmartDashboard.putBoolean("PathfindAtStart", pathfindAtStart);
+        SmartDashboard.putString("Auto Name", autoChooser.toString());
     }
 
     /**
@@ -93,8 +110,27 @@ public class RobotContainer {
      *
      * @return the command to run in autonomous
      */
-    public Command getAutonomousCommand() {
+    public Command getAutonomousCommand(String auto){
         // An example command will be run in autonomous
+        try{
+            if(pathfindAtStart){
+                List<PathPlannerPath> pathGroup = PathPlannerAuto.getPathGroupFromAutoFile(auto);
+                if (!pathGroup.isEmpty()) {
+                    var initPath = pathGroup.get(0);
+                    Pose2d initPose = new Pose2d(initPath.getAllPathPoints().get(0).position,initPath.getIdealStartingState().rotation());
+                    // Create the constraints to use while pathfinding. The constraints defined in the path will only be used for the path.
+                    PathConstraints constraints = new PathConstraints(
+                            3.0, 4.0,
+                            Units.degreesToRadians(540), Units.degreesToRadians(720));
+
+                    // Since AutoBuilder is configured, we can use it to build pathfinding commands
+                    return AutoBuilder.pathfindToPoseFlipped(initPose,constraints,initPath.getIdealStartingState().velocity()).andThen(autoChooser.getSelected());
+                }
+            }
+        } catch (IOException | org.json.simple.parser.ParseException e){
+            System.out.println("Error: " + e.getMessage());
+        }
+
         return autoChooser.getSelected();
     }
 }
