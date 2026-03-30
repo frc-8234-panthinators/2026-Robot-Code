@@ -107,7 +107,7 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotPeriodic() {
-        //NOTE: Red & green are swapped because the LEDs are weird.
+        // NOTE: Red & green are swapped because the LEDs are weird.
         if (swerve.getAlign()) {
             if (swerve.getDistanceFromHub() >= 2.0) {
                 m_redPattern.applyTo(m_ledBuffer);
