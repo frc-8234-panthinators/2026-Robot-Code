@@ -22,3 +22,27 @@ systemProp.javax.net.ssl.trustStoreType=Windows-ROOT
 ```
 
 so that Gradle will use the school certificates and download vendor libraries correctly
+
+## CAN ID Set up
+
+|Position|Drive CAN ID|Rotation CAN ID|Encoder CAN ID|
+|-|-|-|-|
+|Front Left|1|2|3|
+|Front Right|4|5|6|
+|Back Right|7|8|9|
+|Back Left|10|11|12|
+
+Gyro: 13
+
+
+## Robot orientation
+
+```
+       FRONT +X
+L  ┌---┐     ┌---┐
+E  |   |     |   |
+F  |   └-----┘   |
+T  |             |
++  |             |
+Y  └-------------┘
+```
