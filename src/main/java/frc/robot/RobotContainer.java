@@ -4,23 +4,17 @@
 
 package frc.robot;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.List;
-
-import org.littletonrobotics.junction.Logger;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
@@ -28,6 +22,8 @@ import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -59,10 +55,11 @@ public class RobotContainer {
 
         // NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
         NamedCommands.registerCommand("Intake", shooter.intakeCommand());
-        NamedCommands.registerCommand("Shoot", shooter.shooterCommand(swerve.getDistanceFromHub()));
-        NamedCommands.registerCommand("StopShooter", shooter.stopCommand());
+        NamedCommands.registerCommand("Shoot", shooter.distShootCommand().andThen(shooter.shooterCommand(swerve)));
+        NamedCommands.registerCommand("StopShooter", shooter.stopCommand().andThen(shooter.manualShootCommand()));
         NamedCommands.registerCommand("Align", swerve.alignCommand());
-        NamedCommands.registerCommand("Climb", climber.climbCommand());
+        NamedCommands.registerCommand("BackClimbMove", climber.backCommand());
+        NamedCommands.registerCommand("ForwardClimbMove", climber.neutralCommand());
 
         // Configure the trigger bindings
         configureBindings();
@@ -73,11 +70,8 @@ public class RobotContainer {
         // Another option that allows you to specify the default auto by its name
         // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
 
-
-
         SmartDashboard.putData("Auto Chooser", autoChooser);
         SmartDashboard.putBoolean("PathfindAtStart", pathfindAtStart);
-        SmartDashboard.putString("Auto Name", autoChooser.toString());
     }
 
     /**
@@ -91,18 +85,19 @@ public class RobotContainer {
      */
     private void configureBindings() {
         xbox.runIntake.onTrue(shooter.intakeCommand());
-        xbox.runShooter.onTrue(shooter.shooterCommand(swerve.getDistanceFromHub()));
-        xbox.distShoot.toggleOnTrue(
-                shooter.switchShootType().andThen(shooter.shooterCommand(swerve.getDistanceFromHub())));
-        xbox.distShoot.toggleOnFalse(shooter.switchShootType());
+        xbox.runShooter.onTrue(shooter.shooterCommand(swerve));
+        xbox.distShoot
+                .whileTrue(shooter.distShootCommand()
+                        .alongWith(Commands.runOnce(swerve::lock, swerve).repeatedly()))
+                .toggleOnFalse(shooter.manualShootCommand());
         xbox.stopShooter.onTrue(shooter.stopCommand());
         xbox.dpadLeft.onTrue(swerve.resetHeading());
         xbox.align.toggleOnTrue(swerve.alignCommand());
         xbox.align.toggleOnFalse(swerve.stopAlignCommand());
         xbox.dpadDown.onTrue(shooter.nudgeDownCommand());
         xbox.dpadUp.onTrue(shooter.nudgeUpCommand());
-        xbox.climb.onTrue(climber.climbCommand());
-        xbox.neutral.onTrue(climber.neutralCommand());
+        xbox.backClimb.onTrue(climber.backCommand());
+        xbox.neutralClimb.onTrue(climber.neutralCommand());
     }
 
     /**
@@ -110,27 +105,33 @@ public class RobotContainer {
      *
      * @return the command to run in autonomous
      */
-    public Command getAutonomousCommand(String auto){
+    public Command getAutonomousCommand(String autoNameString) {
         // An example command will be run in autonomous
-        try{
-            if(pathfindAtStart){
-                List<PathPlannerPath> pathGroup = PathPlannerAuto.getPathGroupFromAutoFile(auto);
+        try {
+            if (pathfindAtStart) {
+                List<PathPlannerPath> pathGroup = PathPlannerAuto.getPathGroupFromAutoFile(autoNameString);
                 if (!pathGroup.isEmpty()) {
-                    var initPath = pathGroup.get(0);
-                    Pose2d initPose = new Pose2d(initPath.getAllPathPoints().get(0).position,initPath.getIdealStartingState().rotation());
-                    // Create the constraints to use while pathfinding. The constraints defined in the path will only be used for the path.
-                    PathConstraints constraints = new PathConstraints(
-                            3.0, 4.0,
-                            Units.degreesToRadians(540), Units.degreesToRadians(720));
+                    PathPlannerPath initPath = pathGroup.get(0);
+                    Pose2d initPose = new Pose2d(
+                            initPath.getAllPathPoints().get(0).position,
+                            initPath.getIdealStartingState().rotation());
+                    // Create the constraints to use while pathfinding. The constraints defined in the path will only be
+                    // used for the path.
+                    PathConstraints constraints =
+                            new PathConstraints(3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
 
                     // Since AutoBuilder is configured, we can use it to build pathfinding commands
-                    return AutoBuilder.pathfindToPoseFlipped(initPose,constraints,initPath.getIdealStartingState().velocity()).andThen(autoChooser.getSelected());
+                    return AutoBuilder.pathfindToPoseFlipped(
+                                    initPose,
+                                    constraints,
+                                    initPath.getIdealStartingState().velocity())
+                            .andThen(AutoBuilder.buildAuto(autoNameString));
                 }
             }
-        } catch (IOException | org.json.simple.parser.ParseException e){
+        } catch (IOException | org.json.simple.parser.ParseException e) {
             System.out.println("Error: " + e.getMessage());
         }
 
-        return autoChooser.getSelected();
+        return AutoBuilder.buildAuto(autoNameString);
     }
 }

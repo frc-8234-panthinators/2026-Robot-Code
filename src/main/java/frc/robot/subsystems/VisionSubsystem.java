@@ -38,7 +38,7 @@ public class VisionSubsystem extends SubsystemBase {
     private VisionSystemSim visionSim;
 
     private static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
-    private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+    private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.25, 0.25, 0.5);
     private Matrix<N3, N1> curStdDevs;
 
     private AprilTagFieldLayout tags;

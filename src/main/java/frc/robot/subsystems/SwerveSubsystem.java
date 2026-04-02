@@ -26,7 +26,7 @@ import swervelib.parser.SwerveParser;
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
     private boolean align = false;
-    private boolean allianceBoolean = true; // TRUE = RED, FALSE = BLUE
+    private boolean allianceBoolean = false; // TRUE = RED, FALSE = BLUE
 
     private final Translation2d redHub = new Translation2d(Units.inchesToMeters(469.11), Units.inchesToMeters(158.85));
     private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(182.11), Units.inchesToMeters(158.85));
@@ -65,6 +65,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     },
                     this // Reference to this subsystem to set requirements
                     );
+            // swerveDrive.setMotorIdleMode(true);
         } catch (Exception e) {
             // Handle exception as needed
             e.printStackTrace();
@@ -231,6 +232,16 @@ public class SwerveSubsystem extends SubsystemBase {
     public boolean getAlign() {
         return align;
     }
+
+    public void lock() {
+        swerveDrive.lockPose();
+    }
+
+    // public Command lockCommand() {
+    //     return run(() -> {
+    //         swerveDrive.lockPose();
+    //     });
+    // }
 
     // public Command distanceTestCommand(){
     //     return alignCommand()

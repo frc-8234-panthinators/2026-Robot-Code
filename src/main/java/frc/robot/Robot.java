@@ -6,11 +6,11 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.reduxrobotics.canand.CanandEventLoop;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringSubscriber;
@@ -105,6 +105,19 @@ public class Robot extends LoggedRobot {
 
         NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard/Auto Chooser");
         nameSub = table.getStringTopic("active").subscribe("");
+
+        CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand());
+
+        var alliance = DriverStation.getAlliance();
+        boolean quickFixBool;
+        if (alliance.isPresent()) {
+            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
+            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
+        } else {
+            allianceOffset = -1;
+            quickFixBool = false;
+        }
+        swerve.quickFixAlliance(quickFixBool);
     }
 
     /**
@@ -116,7 +129,7 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotPeriodic() {
-        //NOTE: Red & green are swapped because the LEDs are weird.
+        // NOTE: Red & green are swapped because the LEDs are weird.
         if (swerve.getAlign()) {
             if (swerve.getDistanceFromHub() >= 2.0) {
                 m_redPattern.applyTo(m_ledBuffer);
@@ -134,13 +147,10 @@ public class Robot extends LoggedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
-        
 
         // Correct pose estimate with vision measurements
         vision.periodic(swerve);
 
-
-        
         Logger.recordOutput("RobotPose", swerve.getPose());
         Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
         Logger.recordOutput("DistanceFromHub", swerve.getDistanceFromHub());
@@ -148,14 +158,17 @@ public class Robot extends LoggedRobot {
         Logger.recordOutput("allianceBoolean", swerve.getAllianceBoolean());
         Logger.recordOutput("EstimatedShooterSpeed", shooter.shootFunction(swerve.getDistanceFromHub()));
 
-        autoString = nameSub.get(); 
-        Logger.recordOutput("AutoNameFromTables", autoString); //DO NOT COMMENT OUT
+        autoString = nameSub.get();
+        Logger.recordOutput("AutoNameFromTables", autoString); // DO NOT COMMENT OUT, NEEDED FOR AUTOS
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
     public void disabledInit() {
-        shooter.stopCommand();
+        CommandScheduler.getInstance().schedule(shooter.stopCommand());
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.cancel();
+        }
     }
 
     @Override
@@ -164,16 +177,7 @@ public class Robot extends LoggedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
-        var alliance = DriverStation.getAlliance();
-        boolean quickFixBool;
-        if (alliance.isPresent()) {
-            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
-            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceOffset = -1;
-            quickFixBool = false;
-        }
-        swerve.quickFixAlliance(quickFixBool);
+        CommandScheduler.getInstance().schedule(shooter.distShootCommand());
         m_autonomousCommand = m_robotContainer.getAutonomousCommand(autoString);
         Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
 
@@ -190,7 +194,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
-        shooter.switchShootType();
+        CommandScheduler.getInstance().schedule(shooter.manualShootCommand());
         // This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
