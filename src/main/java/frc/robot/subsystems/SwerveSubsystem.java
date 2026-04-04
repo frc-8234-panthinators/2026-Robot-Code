@@ -50,8 +50,8 @@ public class SwerveSubsystem extends SubsystemBase {
                     // optionally outputs individual module feedforwards
                     new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller
                             // for holonomic drive trains
-                            new PIDConstants(0.006, 0.0, 0.002), // Translation PID constants
-                            new PIDConstants(0.03, 0.0, 0.002) // Rotation PID constants
+                            new PIDConstants(2, 0.0, 0.01), // Translation PID constants
+                            new PIDConstants(1, 0.0, 0.01) // Rotation PID constants
                             ),
                     config, // The robot configuration
                     () -> {
@@ -203,6 +203,22 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public void quickFixAlliance(boolean alliance) {
         allianceBoolean = alliance;
+    }
+
+    public Command autoAlignCommand() {
+        return this.runOnce(() -> {
+                    align = true;
+                })
+                .andThen(this.run(() -> {
+                            drive(0, 0, 0, true);
+                        })
+                        .withTimeout(1));
+    }
+
+    public Command unalignCommand() {
+        return this.runOnce(() -> {
+            align = false;
+        });
     }
 
     public ChassisSpeeds getRobotVelocity() {

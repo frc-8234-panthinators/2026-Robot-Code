@@ -38,7 +38,7 @@ public class VisionSubsystem extends SubsystemBase {
     private VisionSystemSim visionSim;
 
     private static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
-    private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.25, 0.25, 0.5);
+    private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
     private Matrix<N3, N1> curStdDevs;
 
     private AprilTagFieldLayout tags;
@@ -142,6 +142,10 @@ public class VisionSubsystem extends SubsystemBase {
                         || (target.getFiducialId() == 9)
                         || (target.getFiducialId() == 10)
                         || (target.getFiducialId() == 11)
+                        || (target.getFiducialId() == 13)
+                        || (target.getFiducialId() == 14)
+                        || (target.getFiducialId() == 15)
+                        || (target.getFiducialId() == 16)
                         || (target.getFiducialId() == 18)
                         || (target.getFiducialId() == 19)
                         || (target.getFiducialId() == 20)
@@ -149,7 +153,11 @@ public class VisionSubsystem extends SubsystemBase {
                         || (target.getFiducialId() == 24)
                         || (target.getFiducialId() == 25)
                         || (target.getFiducialId() == 26)
-                        || (target.getFiducialId() == 27)) {
+                        || (target.getFiducialId() == 27)
+                        || (target.getFiducialId() == 29)
+                        || (target.getFiducialId() == 30)
+                        || (target.getFiducialId() == 31)
+                        || (target.getFiducialId() == 32)) {
                     newTargets.add(target);
                 }
             }

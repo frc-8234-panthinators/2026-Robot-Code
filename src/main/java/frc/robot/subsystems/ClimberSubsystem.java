@@ -42,7 +42,7 @@ public class ClimberSubsystem extends SubsystemBase {
         config.MotionMagic.MotionMagicCruiseVelocity = MAX_VELOCITY;
         config.MotionMagic.MotionMagicAcceleration = MAX_ACCELERATION;
 
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         config.CurrentLimits.SupplyCurrentLimit = 40;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;

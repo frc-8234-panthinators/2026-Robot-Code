@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.431,
+        "x": 3.5732667617689007,
         "y": 4.034
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.3862256485784368,
+        "x": 1.5284924103473374,
         "y": 4.034
       },
       "isLocked": false,
@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 1.625,
+        "x": 1.9559343794579167,
         "y": 4.034
       },
       "prevControl": {
-        "x": 3.7136996106038227,
+        "x": 4.04463399006174,
         "y": 4.034
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "TowerPrepForClimb"
     }
   ],
   "rotationTargets": [],

@@ -3,48 +3,53 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.7155920114122676,
-        "y": 0.7679885877318122
+        "x": 7.817146932952923,
+        "y": 3.7180028530670475
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.056904283069498,
-        "y": 0.7733003881202242
+        "x": 7.610128388017117,
+        "y": 3.4204136947218258
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "RCenter"
     },
     {
       "anchor": {
-        "x": 2.809885877318117,
-        "y": 1.3114122681883031
+        "x": 6.160998573466475,
+        "y": 2.5535235378031382
       },
       "prevControl": {
-        "x": 3.1251120446767007,
-        "y": 0.7111899264653679
+        "x": 7.497752315801607,
+        "y": 2.3899724856653695
       },
       "nextControl": {
-        "x": 2.671340963538717,
-        "y": 1.575215724859709
+        "x": 5.0901323013522095,
+        "y": 2.68454341076582
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.9651497860199716,
-        "y": 2.3465049928673327
+        "x": 2.2147075606276743,
+        "y": 2.5535235378031382
       },
       "prevControl": {
-        "x": 2.934209412517517,
-        "y": 2.098426994472617
+        "x": 1.9695920756355054,
+        "y": 2.5043463172934977
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "FrontRBump"
+      "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -58,13 +63,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 72.759
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

@@ -56,7 +56,7 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterConfig.Slot0.kI = 0; // no output for integrated error
         shooterConfig.Slot0.kD = 0; // no output for error derivative
 
-        shooterConfig.CurrentLimits.SupplyCurrentLimit = 60;
+        shooterConfig.CurrentLimits.SupplyCurrentLimit = 40;
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -78,7 +78,7 @@ public class ShooterSubsystem extends SubsystemBase {
         TalonFXConfiguration floorConfig = new TalonFXConfiguration();
 
         floorConfig.Slot0.kP = 0;
-        floorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+        floorConfig.CurrentLimits.SupplyCurrentLimit = 20;
         floorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         floorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -116,7 +116,7 @@ public class ShooterSubsystem extends SubsystemBase {
         //                 * (distance - pairsForDist[pairsForDist.length - 1][0])
         //         + pairsForDist[pairsForDist.length - 1][1];
 
-        return 0.0859544 * distance + 0.498184 + 0.01 + linearBump;
+        return 0.0859544 * distance + 0.498184 + 0.015 + linearBump;
     }
 
     public void spinIndexer(double rps) {
@@ -144,7 +144,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void spinFloor(double rps) {
-        floorMotor.set(rps / 100);
+        floorMotor.set(2 * rps / 100);
     }
 
     public void stopFloor() {
@@ -157,13 +157,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void nudgeUp() {
         if (linearBump < 1) {
-            linearBump += 0.01;
+            linearBump += 0.001;
         }
     }
 
     public void nudgeDown() {
-        if (shooterSpeed > 0) {
-            shooterSpeed -= 0.01;
+        if (linearBump > -1) {
+            linearBump -= 0.001;
         }
     }
 
@@ -177,13 +177,13 @@ public class ShooterSubsystem extends SubsystemBase {
                     stopIntake();
                     spinShooter(shooterSpeed * 100);
                 })
-                .andThen(Commands.waitSeconds(0.5))
+                .andThen(Commands.waitSeconds(0.6))
                 .andThen(this.runOnce(() -> {
                     double speed = (distanceShoot) ? shootFunction(swerve.getDistanceFromHub()) : shooterSpeed;
                     spinIndexer(75 + 25 * speed);
                     spinShooter(speed * 100);
                     spinIntake(50 + 50 * speed);
-                    spinFloor(speed * 60);
+                    spinFloor(speed * 40);
                 }));
     }
 
@@ -204,7 +204,7 @@ public class ShooterSubsystem extends SubsystemBase {
             stopShooter();
             spinIndexer(-120);
             spinIntake(108);
-            spinFloor(-40);
+            //spinFloor(-40);
         });
     }
 
