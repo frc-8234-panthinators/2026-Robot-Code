@@ -14,15 +14,10 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.ClimberSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
 import java.io.IOException;
 import java.util.List;
 
@@ -36,35 +31,19 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final XBoxContainer xbox;
     private final SwerveSubsystem swerve;
-    private final ShooterSubsystem shooter;
-    private final VisionSubsystem vision;
-    private final ClimberSubsystem climber;
     private final SendableChooser<Command> autoChooser;
     private boolean pathfindAtStart = true;
-    private boolean shootAtStart = true;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController m_driverController =
             new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer(SwerveSubsystem swerve, VisionSubsystem vision, XBoxContainer xbox) {
+    public RobotContainer(SwerveSubsystem swerve, XBoxContainer xbox) {
         this.xbox = xbox;
-        shooter = new ShooterSubsystem();
-        climber = new ClimberSubsystem();
         this.swerve = swerve;
-        this.vision = vision;
 
-        // NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
-        NamedCommands.registerCommand("Intake", shooter.intakeCommand());
-        NamedCommands.registerCommand("StopIntake", shooter.stopCommand());
-        NamedCommands.registerCommand("Shoot", shooter.distShootCommand().andThen(shooter.shooterCommand(swerve)));
-        NamedCommands.registerCommand("StopShooter", shooter.stopCommand().andThen(shooter.manualShootCommand()));
-        NamedCommands.registerCommand("Align", swerve.alignCommand());
-        NamedCommands.registerCommand("BackClimber", climber.backCommand());
-        NamedCommands.registerCommand("ForwardClimber", climber.neutralCommand());
-        NamedCommands.registerCommand("AutoAlign", swerve.autoAlignCommand());
-        NamedCommands.registerCommand("Unalign", swerve.unalignCommand());
+        NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
 
         // Configure the trigger bindings
         configureBindings();
@@ -77,7 +56,6 @@ public class RobotContainer {
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
         SmartDashboard.putBoolean("PathfindAtStart", pathfindAtStart);
-        SmartDashboard.putBoolean("ShootAtStart", shootAtStart);
     }
 
     /**
@@ -90,22 +68,8 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        xbox.runIntake.onTrue(shooter.intakeCommand());
-        xbox.runShooter.onTrue(shooter.shooterCommand(swerve));
-        xbox.distShoot
-                .whileTrue(shooter.distShootCommand()
-                        .alongWith(Commands.runOnce(swerve::lock, swerve).repeatedly()))
-                .toggleOnFalse(shooter.manualShootCommand());
-        xbox.stopShooter.onTrue(shooter.stopCommand());
         xbox.dpadLeft.onTrue(swerve.resetHeading());
-        xbox.align.toggleOnTrue(swerve.alignCommand());
-        xbox.align.toggleOnFalse(swerve.stopAlignCommand());
-        xbox.dpadDown.onTrue(shooter.nudgeDownCommand());
-        xbox.dpadUp.onTrue(shooter.nudgeUpCommand());
-        xbox.backClimb.onTrue(climber.backCommand());
-        xbox.neutralClimb.onTrue(climber.neutralCommand());
     }
-
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *
@@ -115,7 +79,6 @@ public class RobotContainer {
         // An example command will be run in autonomous
         try {
             pathfindAtStart = SmartDashboard.getBoolean("PathfindAtStart", pathfindAtStart);
-            shootAtStart = SmartDashboard.getBoolean("ShootAtStart", shootAtStart);
             if (pathfindAtStart) {
                 List<PathPlannerPath> pathGroup = PathPlannerAuto.getPathGroupFromAutoFile(autoNameString);
                 if (!pathGroup.isEmpty()) {
@@ -127,35 +90,16 @@ public class RobotContainer {
                     // used for the path.
                     PathConstraints constraints =
                             new PathConstraints(3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
-                    if (shootAtStart) {
-                        // Since AutoBuilder is configured, we can use it to build pathfinding commands
-                        return shooter.distShootCommand()
-                                .andThen(shooter.shooterCommand(swerve))
-                                .andThen(new WaitCommand(3))
-                                .andThen(shooter.stopCommand())
-                                .andThen(AutoBuilder.pathfindToPoseFlipped(
-                                        initPose,
-                                        constraints,
-                                        initPath.getIdealStartingState().velocity()))
-                                .andThen(AutoBuilder.buildAuto(autoNameString));
-                    } else {
-                        return AutoBuilder.pathfindToPoseFlipped(
-                                        initPose,
-                                        constraints,
-                                        initPath.getIdealStartingState().velocity())
-                                .andThen(AutoBuilder.buildAuto(autoNameString));
-                    }
+
+                    return AutoBuilder.pathfindToPoseFlipped(
+                                    initPose,
+                                    constraints,
+                                    initPath.getIdealStartingState().velocity())
+                            .andThen(AutoBuilder.buildAuto(autoNameString));
                 }
             }
         } catch (IOException | org.json.simple.parser.ParseException e) {
             System.out.println("Error: " + e.getMessage());
-        }
-        if (shootAtStart) {
-            return shooter.distShootCommand()
-                    .andThen(shooter.shooterCommand(swerve))
-                    .andThen(new WaitCommand(3))
-                    .andThen(shooter.stopCommand())
-                    .andThen(AutoBuilder.buildAuto(autoNameString));
         }
         return AutoBuilder.buildAuto(autoNameString);
     }

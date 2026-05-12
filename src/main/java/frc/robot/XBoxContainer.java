@@ -13,7 +13,6 @@ public class XBoxContainer {
     public JoystickButton reset = new JoystickButton(controller, XboxController.Button.kA.value);
     public JoystickButton backClimb = new JoystickButton(controller, XboxController.Button.kLeftBumper.value);
     public JoystickButton neutralClimb = new JoystickButton(controller, XboxController.Button.kRightBumper.value);
-    public Trigger align = new Trigger(() -> controller.getLeftTriggerAxis() > 0.1);
     public Trigger distShoot = new Trigger(() -> controller.getRightTriggerAxis() > 0.1);
 
     public Trigger dpadDown = new Trigger(() -> controller.getPOV() == 180);

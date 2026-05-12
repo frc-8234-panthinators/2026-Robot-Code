@@ -4,13 +4,9 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -18,22 +14,19 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
+import swervelib.telemetry.SwerveDriveTelemetry;
+import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
-    private boolean align = false;
     private boolean allianceBoolean = false; // TRUE = RED, FALSE = BLUE
-
-    private final Translation2d redHub = new Translation2d(Units.inchesToMeters(469.11), Units.inchesToMeters(158.85));
-    private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(182.11), Units.inchesToMeters(158.85));
 
     public SwerveSubsystem() {
         double maximumSpeed = Units.feetToMeters(17.4);
-        // SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         RobotConfig config;
         try {
@@ -121,49 +114,13 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return Drive command.
      */
     public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
-        Logger.recordOutput("Align", this.align);
-        if (!this.align) {
-            swerveDrive.drive(
-                    new Translation2d(
-                            translationX * swerveDrive.getMaximumChassisVelocity(),
-                            translationY * swerveDrive.getMaximumChassisVelocity()),
-                    (rotation * Math.abs(rotation)) * swerveDrive.getMaximumChassisAngularVelocity(),
-                    fieldRelative,
-                    false);
-        } else {
-            Pose2d pose = getPose();
-            double angle;
-            double driveDirect;
-            if (allianceBoolean) {
-                driveDirect = -1;
-                angle = Math.atan2(
-                        (pose.getTranslation().getY() - redHub.getY()),
-                        (redHub.getX() - pose.getTranslation().getX()));
-            } else {
-                driveDirect = 1;
-                angle = Math.atan2(
-                        (pose.getTranslation().getY() - blueHub.getY()),
-                        (blueHub.getX() - pose.getTranslation().getX()));
-            }
-            swerveDrive.drive(
-                    new Translation2d(
-                            driveDirect
-                                    * ((translationY * Math.sin(angle)) - (translationX * -Math.cos(angle)))
-                                    * swerveDrive.getMaximumChassisVelocity(),
-                            driveDirect
-                                    * ((translationY * Math.cos(angle)) - (translationX * Math.sin(angle)))
-                                    * swerveDrive.getMaximumChassisVelocity()),
-                    (MathUtil.clamp(
-                                    MathUtil.angleModulus(
-                                            -pose.getRotation().getRadians() - angle
-                                            // + Math.signum(translationY) * 0.2 / getDistanceFromHub()
-                                            ),
-                                    -0.6,
-                                    0.6)
-                            * swerveDrive.getMaximumChassisAngularVelocity()),
-                    true,
-                    false);
-        }
+        swerveDrive.drive(
+                new Translation2d(
+                        translationY * swerveDrive.getMaximumChassisVelocity(),
+                        -translationX * swerveDrive.getMaximumChassisVelocity()),
+                (rotation * Math.abs(rotation)) * swerveDrive.getMaximumChassisAngularVelocity(),
+                fieldRelative,
+                false);
     }
 
     // public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
@@ -186,10 +143,6 @@ public class SwerveSubsystem extends SubsystemBase {
         return allianceBoolean;
     }
 
-    public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs) {
-        swerveDrive.addVisionMeasurement(pose, timestamp, stdDevs);
-    }
-
     public void resetOdometry(Pose2d pose) {
         swerveDrive.resetOdometry(pose);
     }
@@ -205,48 +158,12 @@ public class SwerveSubsystem extends SubsystemBase {
         allianceBoolean = alliance;
     }
 
-    public Command autoAlignCommand() {
-        return this.runOnce(() -> {
-                    align = true;
-                })
-                .andThen(this.run(() -> {
-                            drive(0, 0, 0, true);
-                        })
-                        .withTimeout(1));
-    }
-
-    public Command unalignCommand() {
-        return this.runOnce(() -> {
-            align = false;
-        });
-    }
-
     public ChassisSpeeds getRobotVelocity() {
         return swerveDrive.getRobotVelocity();
     }
 
     public void driveRelative(ChassisSpeeds chassis) {
         swerveDrive.drive(chassis);
-    }
-
-    public double getDistanceFromHub() {
-        return getPose().getTranslation().getDistance((allianceBoolean == true) ? redHub : blueHub);
-    }
-
-    public Command alignCommand() {
-        return runOnce(() -> {
-            align = true;
-        });
-    }
-
-    public Command stopAlignCommand() {
-        return runOnce(() -> {
-            align = false;
-        });
-    }
-
-    public boolean getAlign() {
-        return align;
     }
 
     public void lock() {
