@@ -204,7 +204,7 @@ public class ShooterSubsystem extends SubsystemBase {
             stopShooter();
             spinIndexer(-120);
             spinIntake(108);
-            //spinFloor(-40);
+            // spinFloor(-40);
         });
     }
 
