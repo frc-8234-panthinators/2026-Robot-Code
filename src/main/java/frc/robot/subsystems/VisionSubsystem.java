@@ -43,6 +43,9 @@ public class VisionSubsystem extends SubsystemBase {
 
     private AprilTagFieldLayout tags;
 
+    /**
+     * Initialize photon vision wiht a single camera and this year's april tags
+     */
     public VisionSubsystem() {
         // leftCam = new PhotonCamera("leftCam");
         rightCam = new PhotonCamera("rightCam");
@@ -127,13 +130,17 @@ public class VisionSubsystem extends SubsystemBase {
     //     return leftCamEstimator.estimateCoprocMultiTagPose(result);
     // }
 
+    /**
+     * Update vision from the list of visible tags
+     */
     public void periodic(SwerveSubsystem swerve) {
         var results = rightCam.getAllUnreadResults();
         for (PhotonPipelineResult result : results) {
             List<PhotonTrackedTarget> targets = result.getTargets();
             List<PhotonTrackedTarget> newTargets = new ArrayList<PhotonTrackedTarget>();
             for (PhotonTrackedTarget target : targets) {
-                //
+                // Only pay attention to some of the tags. We skip the ones that are out of position during field setup
+                // as they really confuse the pose estimation when they are out of place
                 if ((target.getFiducialId() == 2)
                         || (target.getFiducialId() == 3)
                         || (target.getFiducialId() == 4)

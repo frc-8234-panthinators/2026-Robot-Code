@@ -123,6 +123,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
         Logger.recordOutput("Align", this.align);
         if (!this.align) {
+            // Drive in the field XY coordinate system
             swerveDrive.drive(
                     new Translation2d(
                             translationX * swerveDrive.getMaximumChassisVelocity(),
@@ -131,6 +132,8 @@ public class SwerveSubsystem extends SubsystemBase {
                     fieldRelative,
                     false);
         } else {
+            // Drive in a polar coordinate system with the origin as the hub
+            // We need to pick the right hub based on our alliance
             Pose2d pose = getPose();
             double angle;
             double driveDirect;
@@ -145,6 +148,11 @@ public class SwerveSubsystem extends SubsystemBase {
                         (pose.getTranslation().getY() - blueHub.getY()),
                         (blueHub.getX() - pose.getTranslation().getX()));
             }
+            // Convert from the polar space to the field XY space since swerve works with the XY space
+            // To get the X and Y inputs we multiply the polar vector by a matrix:
+            // [  Cos(theta) , Sin(theta) ] * [Movement To/From Hub]
+            // [ -Sin(theta) , Cos(theta) ]   [Rotation Around Hub]
+            // For the rotation we attempt to face the hub by moving to reduce the difference between the pose and hub direction angle
             swerveDrive.drive(
                     new Translation2d(
                             driveDirect
