@@ -29,6 +29,9 @@ public class ClimberSubsystem extends SubsystemBase {
 
     private double position = 0.0;
 
+    /**
+     * Initialize the climber motor with PID values in slot 0
+     */
     public ClimberSubsystem() {
         climberMotor = new TalonFX(CLIMBER_CAN_ID);
 

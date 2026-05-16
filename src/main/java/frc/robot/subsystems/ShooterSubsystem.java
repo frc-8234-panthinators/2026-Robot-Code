@@ -41,6 +41,9 @@ public class ShooterSubsystem extends SubsystemBase {
     private final TalonFX intakeMotor;
     private final TalonFX floorMotor;
 
+    /**
+     * Initialize all of the shooter motors with PID values in slot 0
+     */
     public ShooterSubsystem() {
         indexerMotor = new TalonFX(INDEXER_CAN_ID);
         shooterMotor = new TalonFX(SHOOTER_CAN_ID);
@@ -85,6 +88,9 @@ public class ShooterSubsystem extends SubsystemBase {
         floorMotor.getConfigurator().apply(floorConfig);
     }
 
+    /**
+     * Convert a distance from the basket to a target speed for shooting into it
+     */
     public double shootFunction(double distance) {
         // double adjustedDist = distance - 0.5171;
         // return 0.7 * Math.pow(Math.tan(1.13446) / adjustedDist - 1.8288 / (adjustedDist * adjustedDist), -0.5);
@@ -155,12 +161,18 @@ public class ShooterSubsystem extends SubsystemBase {
         return shooterSpeed;
     }
 
+    /**
+     * Increase the shooter speed offset, used if we are consistenly short of the basket
+     */
     public void nudgeUp() {
         if (linearBump < 1) {
             linearBump += 0.001;
         }
     }
 
+    /**
+     * Reduce the shooter speed offset, used if we are consistently shooting too far past the basket
+     */
     public void nudgeDown() {
         if (linearBump > -1) {
             linearBump -= 0.001;
@@ -171,6 +183,9 @@ public class ShooterSubsystem extends SubsystemBase {
         return isShooting;
     }
 
+    /**
+     * Lock the wheels in an X pattern to make it harder for defense bots to push and then start shooting
+     */
     public Command shooterCommand(SwerveSubsystem swerve) {
         return this.runOnce(() -> {
                     isShooting = true;
