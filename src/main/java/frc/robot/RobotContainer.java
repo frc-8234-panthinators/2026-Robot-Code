@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
@@ -35,6 +36,7 @@ import java.util.List;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final XBoxContainer xbox;
+    private final PS5Container ps5;
     private final SwerveSubsystem swerve;
     private final ShooterSubsystem shooter;
     private final VisionSubsystem vision;
@@ -47,11 +49,14 @@ public class RobotContainer {
     private final CommandXboxController m_driverController =
             new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
+    private final CommandPS5Controller m_ps5DriverController = new CommandPS5Controller(1);
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer(SwerveSubsystem swerve, VisionSubsystem vision, XBoxContainer xbox) {
+    public RobotContainer(SwerveSubsystem swerve, VisionSubsystem vision, XBoxContainer xbox, PS5Container ps5) {
         this.xbox = xbox;
         shooter = new ShooterSubsystem();
         climber = new ClimberSubsystem();
+        this.ps5 = ps5;
         this.swerve = swerve;
         this.vision = vision;
 
@@ -104,6 +109,21 @@ public class RobotContainer {
         xbox.dpadUp.onTrue(shooter.nudgeUpCommand());
         xbox.backClimb.onTrue(climber.backCommand());
         xbox.neutralClimb.onTrue(climber.neutralCommand());
+
+        ps5.runIntake.onTrue(shooter.intakeCommand());
+        ps5.runShooter.onTrue(shooter.shooterCommand(swerve));
+        ps5.distShoot
+                .whileTrue(shooter.distShootCommand()
+                        .alongWith(Commands.runOnce(swerve::lock, swerve).repeatedly()))
+                .toggleOnFalse(shooter.manualShootCommand());
+        ps5.stopShooter.onTrue(shooter.stopCommand());
+        ps5.dpadLeft.onTrue(swerve.resetHeading());
+        ps5.align.toggleOnTrue(swerve.alignCommand());
+        ps5.align.toggleOnFalse(swerve.stopAlignCommand());
+        ps5.dpadDown.onTrue(shooter.nudgeDownCommand());
+        ps5.dpadUp.onTrue(shooter.nudgeUpCommand());
+        ps5.backClimb.onTrue(climber.backCommand());
+        ps5.neutralClimb.onTrue(climber.neutralCommand());
     }
 
     /**

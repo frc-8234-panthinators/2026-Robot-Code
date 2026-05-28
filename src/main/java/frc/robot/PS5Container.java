@@ -1,20 +1,20 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.PS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-public class XBoxContainer {
-    private XboxController controller = new XboxController(0);
+public class PS5Container {
+    private PS5Controller controller = new PS5Controller(1);
 
-    public JoystickButton runIntake = new JoystickButton(controller, XboxController.Button.kY.value);
-    public JoystickButton runShooter = new JoystickButton(controller, XboxController.Button.kB.value);
-    public JoystickButton stopShooter = new JoystickButton(controller, XboxController.Button.kX.value);
-    public JoystickButton reset = new JoystickButton(controller, XboxController.Button.kA.value);
-    public JoystickButton backClimb = new JoystickButton(controller, XboxController.Button.kLeftBumper.value);
-    public JoystickButton neutralClimb = new JoystickButton(controller, XboxController.Button.kRightBumper.value);
-    public Trigger align = new Trigger(() -> controller.getLeftTriggerAxis() > 0.1);
-    public Trigger distShoot = new Trigger(() -> controller.getRightTriggerAxis() > 0.1);
+    public JoystickButton runIntake = new JoystickButton(controller, PS5Controller.Button.kTriangle.value);
+    public JoystickButton runShooter = new JoystickButton(controller, PS5Controller.Button.kCircle.value);
+    public JoystickButton stopShooter = new JoystickButton(controller, PS5Controller.Button.kSquare.value);
+    public JoystickButton reset = new JoystickButton(controller, PS5Controller.Button.kCross.value);
+    public JoystickButton backClimb = new JoystickButton(controller, PS5Controller.Button.kL1.value);
+    public JoystickButton neutralClimb = new JoystickButton(controller, PS5Controller.Button.kR1.value);
+    public JoystickButton align = new JoystickButton(controller, PS5Controller.Button.kL2.value);
+    public JoystickButton distShoot = new JoystickButton(controller, PS5Controller.Button.kR2.value);
 
     public Trigger dpadDown = new Trigger(() -> controller.getPOV() == 180);
     public Trigger dpadUp = new Trigger(() -> controller.getPOV() == 0);

@@ -39,6 +39,7 @@ public class Robot extends LoggedRobot {
     private SwerveSubsystem swerve;
     private ShooterSubsystem shooter = new ShooterSubsystem();
     private XBoxContainer xbox = new XBoxContainer();
+    private PS5Container ps5 = new PS5Container();
     private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
     private int allianceOffset = 1;
@@ -88,7 +89,7 @@ public class Robot extends LoggedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         swerve = new SwerveSubsystem();
-        m_robotContainer = new RobotContainer(swerve, vision, xbox);
+        m_robotContainer = new RobotContainer(swerve, vision, xbox, ps5);
         CanandEventLoop.getInstance();
 
         m_led = new AddressableLED(0);
@@ -217,7 +218,11 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), true);
+        if (DriverStation.isJoystickConnected(1)){
+            swerve.drive(allianceOffset * ps5.driveY(), allianceOffset * ps5.driveX(), -ps5.rotate(), true);
+        } else {
+            swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), true);
+        }
     }
 
     @Override
