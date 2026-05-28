@@ -14,6 +14,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
@@ -30,18 +31,22 @@ import java.util.List;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final XBoxContainer xbox;
+    private final PS5Container ps5;
     private final SwerveSubsystem swerve;
     private final SendableChooser<Command> autoChooser;
     private boolean pathfindAtStart = true;
+
+    private final CommandPS5Controller m_ps5DriverController = new CommandPS5Controller(1);
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController m_driverController =
             new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer(SwerveSubsystem swerve, XBoxContainer xbox) {
+    public RobotContainer(SwerveSubsystem swerve, XBoxContainer xbox, PS5Container ps5) {
         this.xbox = xbox;
         this.swerve = swerve;
+        this.ps5 = ps5;
 
         NamedCommands.registerCommand("ResetHeading", swerve.resetHeading());
 
@@ -69,6 +74,7 @@ public class RobotContainer {
      */
     private void configureBindings() {
         xbox.dpadLeft.onTrue(swerve.resetHeading());
+        ps5.dpadLeft.onTrue(swerve.resetHeading());
     }
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

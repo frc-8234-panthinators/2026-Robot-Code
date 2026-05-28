@@ -31,6 +31,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
     private SwerveSubsystem swerve;
     private XBoxContainer xbox = new XBoxContainer();
+    private PS5Container ps5 = new PS5Container();
     private Command m_autonomousCommand;
     private int allianceOffset = 1;
     private final StringSubscriber nameSub;
@@ -64,7 +65,7 @@ public class Robot extends LoggedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         swerve = new SwerveSubsystem();
-        m_robotContainer = new RobotContainer(swerve, xbox);
+        m_robotContainer = new RobotContainer(swerve, xbox, ps5);
         CanandEventLoop.getInstance();
 
         NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard/Auto Chooser");
@@ -160,7 +161,11 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        swerve.drive(allianceOffset * -xbox.driveX(), allianceOffset * xbox.driveY(), -xbox.rotate(), true);
+        if (DriverStation.isJoystickConnected(1)){
+            swerve.drive(allianceOffset * ps5.driveY(), allianceOffset * ps5.driveX(), -ps5.rotate(), false);
+        } else {
+            swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), false);
+        }
     }
 
     @Override
