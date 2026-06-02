@@ -33,7 +33,6 @@ public class Robot extends LoggedRobot {
     private XBoxContainer xbox = new XBoxContainer();
     private PS5Container ps5 = new PS5Container();
     private Command m_autonomousCommand;
-    private int allianceOffset = 1;
     private final StringSubscriber nameSub;
     private String autoString;
 
@@ -66,23 +65,13 @@ public class Robot extends LoggedRobot {
         // autonomous chooser on the dashboard.
         swerve = new SwerveSubsystem();
         m_robotContainer = new RobotContainer(swerve, xbox, ps5);
+
         CanandEventLoop.getInstance();
 
         NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard/Auto Chooser");
         nameSub = table.getStringTopic("active").subscribe("");
 
         CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand());
-
-        var alliance = DriverStation.getAlliance();
-        boolean quickFixBool;
-        if (alliance.isPresent()) {
-            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
-            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceOffset = -1;
-            quickFixBool = false;
-        }
-        swerve.quickFixAlliance(quickFixBool);
     }
 
     /**
@@ -125,17 +114,6 @@ public class Robot extends LoggedRobot {
     public void autonomousInit() {
         m_autonomousCommand = m_robotContainer.getAutonomousCommand(autoString);
         Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
-        var alliance = DriverStation.getAlliance();
-        boolean quickFixBool;
-        if (alliance.isPresent()) {
-            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
-            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceOffset = -1;
-            quickFixBool = false;
-        }
-        swerve.quickFixAlliance(quickFixBool);
-
         // schedule the autonomous command (example)
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
@@ -162,9 +140,9 @@ public class Robot extends LoggedRobot {
     @Override
     public void teleopPeriodic() {
         if (DriverStation.isJoystickConnected(1)){
-            swerve.drive(allianceOffset * ps5.driveY(), allianceOffset * ps5.driveX(), -ps5.rotate(), false);
+            swerve.drive(0.2 * ps5.driveY(), 0.2 * ps5.driveX(), -0.35 * ps5.rotate(), false);
         } else {
-            swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), false);
+            swerve.drive(0.2 * xbox.driveY(), 0.2 * xbox.driveX(), -0.35 * xbox.rotate(), false);
         }
     }
 
