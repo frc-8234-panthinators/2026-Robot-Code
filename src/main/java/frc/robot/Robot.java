@@ -43,6 +43,7 @@ public class Robot extends LoggedRobot {
     private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
     private int allianceOffset = 1;
+    private double universalYaw = 0.0;
     private AddressableLED m_led;
     private AddressableLEDBuffer m_ledBuffer;
     private final StringSubscriber nameSub;
@@ -108,17 +109,6 @@ public class Robot extends LoggedRobot {
         nameSub = table.getStringTopic("active").subscribe("");
 
         CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand());
-
-        var alliance = DriverStation.getAlliance();
-        boolean quickFixBool;
-        if (alliance.isPresent()) {
-            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
-            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceOffset = -1;
-            quickFixBool = false;
-        }
-        swerve.quickFixAlliance(quickFixBool);
     }
 
     /**
@@ -143,14 +133,13 @@ public class Robot extends LoggedRobot {
         }
         // // Set the LEDs
         m_led.setData(m_ledBuffer);
+        vision.updateYaw();
+        universalYaw = vision.getYaw();
         // Runs athe Scheduler.  This is responsible for polling buttons, adding newly-scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
-
-        // Correct pose estimate with vision measurements
-        vision.periodic(swerve);
 
         Logger.recordOutput("RobotPose", swerve.getPose());
         Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
@@ -181,16 +170,6 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().schedule(shooter.distShootCommand());
         m_autonomousCommand = m_robotContainer.getAutonomousCommand(autoString);
         Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
-        var alliance = DriverStation.getAlliance();
-        boolean quickFixBool;
-        if (alliance.isPresent()) {
-            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
-            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceOffset = -1;
-            quickFixBool = false;
-        }
-        swerve.quickFixAlliance(quickFixBool);
 
         // schedule the autonomous command (example)
         if (m_autonomousCommand != null) {
@@ -218,10 +197,10 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        if (DriverStation.isJoystickConnected(1)){
-            swerve.drive(allianceOffset * ps5.driveY(), allianceOffset * ps5.driveX(), -ps5.rotate(), true);
+        if (DriverStation.isJoystickConnected(1)) {
+            swerve.drive(-ps5.driveY(), -ps5.driveX(), -ps5.rotate(), false, universalYaw);
         } else {
-            swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), true);
+            swerve.drive(-xbox.driveY(), -xbox.driveX(), -xbox.rotate(), false, universalYaw);
         }
     }
 
@@ -245,7 +224,6 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationPeriodic() {
         Logger.recordOutput("RobotPose", swerve.getSimulationDriveTrainPose());
-        vision.updateVisionSim(swerve.getPose());
         // Logger.recordOutput("VisionLeftPose", vision.getEstimatedLeftCamPose().toString());
         // Logger.recordOutput("VisionRightPose", vision.getEstimatedRightCamPose().toString());
     }

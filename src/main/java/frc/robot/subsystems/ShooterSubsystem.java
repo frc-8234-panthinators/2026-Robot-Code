@@ -26,7 +26,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private static boolean distanceShoot = false;
     private boolean isShooting = false;
 
-    private static double shooterSpeed = 0.83;
+    private static double shooterSpeed = 0.75;
     private static double linearBump = 0;
 
     // create a velocity closed-loop request, voltage output, slot 0 configs

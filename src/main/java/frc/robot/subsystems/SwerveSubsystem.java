@@ -4,7 +4,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -120,7 +119,8 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param angularRotationX Rotation of the robot to set
      * @return Drive command.
      */
-    public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
+    public void drive(
+            double translationX, double translationY, double rotation, boolean fieldRelative, double yawFromVision) {
         Logger.recordOutput("Align", this.align);
         if (!this.align) {
             // Drive in the field XY coordinate system
@@ -132,44 +132,12 @@ public class SwerveSubsystem extends SubsystemBase {
                     fieldRelative,
                     false);
         } else {
-            // Drive in a polar coordinate system with the origin as the hub
-            // We need to pick the right hub based on our alliance
-            Pose2d pose = getPose();
-            double angle;
-            double driveDirect;
-            if (allianceBoolean) {
-                driveDirect = -1;
-                angle = Math.atan2(
-                        (pose.getTranslation().getY() - redHub.getY()),
-                        (redHub.getX() - pose.getTranslation().getX()));
-            } else {
-                driveDirect = 1;
-                angle = Math.atan2(
-                        (pose.getTranslation().getY() - blueHub.getY()),
-                        (blueHub.getX() - pose.getTranslation().getX()));
-            }
-            // Convert from the polar space to the field XY space since swerve works with the XY space
-            // To get the X and Y inputs we multiply the polar vector by a matrix:
-            // [  Cos(theta) , Sin(theta) ] * [Movement To/From Hub]
-            // [ -Sin(theta) , Cos(theta) ]   [Rotation Around Hub]
-            // For the rotation we attempt to face the hub by moving to reduce the difference between the pose and hub direction angle
             swerveDrive.drive(
                     new Translation2d(
-                            driveDirect
-                                    * ((translationY * Math.sin(angle)) - (translationX * -Math.cos(angle)))
-                                    * swerveDrive.getMaximumChassisVelocity(),
-                            driveDirect
-                                    * ((translationY * Math.cos(angle)) - (translationX * Math.sin(angle)))
-                                    * swerveDrive.getMaximumChassisVelocity()),
-                    (MathUtil.clamp(
-                                    MathUtil.angleModulus(
-                                            -pose.getRotation().getRadians() - angle
-                                            // + Math.signum(translationY) * 0.2 / getDistanceFromHub()
-                                            ),
-                                    -0.6,
-                                    0.6)
-                            * swerveDrive.getMaximumChassisAngularVelocity()),
-                    true,
+                            translationX * swerveDrive.getMaximumChassisVelocity(),
+                            translationY * swerveDrive.getMaximumChassisVelocity()),
+                    -1.0 * yawFromVision * 0.012 * swerveDrive.getMaximumChassisAngularVelocity(),
+                    fieldRelative,
                     false);
         }
     }
@@ -213,12 +181,12 @@ public class SwerveSubsystem extends SubsystemBase {
         allianceBoolean = alliance;
     }
 
-    public Command autoAlignCommand() {
+    public Command autoAlignCommand(double yaw) {
         return this.runOnce(() -> {
                     align = true;
                 })
                 .andThen(this.run(() -> {
-                            drive(0, 0, 0, true);
+                            drive(0, 0, 0, true, yaw);
                         })
                         .withTimeout(1));
     }

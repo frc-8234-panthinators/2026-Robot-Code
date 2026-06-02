@@ -68,7 +68,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("Align", swerve.alignCommand());
         NamedCommands.registerCommand("BackClimber", climber.backCommand());
         NamedCommands.registerCommand("ForwardClimber", climber.neutralCommand());
-        NamedCommands.registerCommand("AutoAlign", swerve.autoAlignCommand());
+        NamedCommands.registerCommand("AutoAlign", swerve.autoAlignCommand(vision.getYaw()));
         NamedCommands.registerCommand("Unalign", swerve.unalignCommand());
 
         // Configure the trigger bindings
