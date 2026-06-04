@@ -194,7 +194,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 })
                 .andThen(Commands.waitSeconds(0.6))
                 .andThen(this.runOnce(() -> {
-                    double speed = (distanceShoot) ? shootFunction(swerve.getDistanceFromHub()) : shooterSpeed;
+                    double speed = shooterSpeed;
                     spinIndexer(75 + 25 * speed);
                     spinShooter(speed * 100);
                     spinIntake(50 + 50 * speed);
