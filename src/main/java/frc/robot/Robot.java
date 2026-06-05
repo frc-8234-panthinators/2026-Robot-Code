@@ -198,9 +198,9 @@ public class Robot extends LoggedRobot {
     @Override
     public void teleopPeriodic() {
         if (DriverStation.isJoystickConnected(1)) {
-            swerve.drive(-ps5.driveY(), -ps5.driveX(), -ps5.rotate(), false, universalYaw);
+            swerve.drive(-0.45*ps5.driveY(), -0.45*ps5.driveX(), -0.45*ps5.rotate(), false, universalYaw);
         } else {
-            swerve.drive(-xbox.driveY(), -xbox.driveX(), -xbox.rotate(), false, universalYaw);
+            swerve.drive(-0.45*xbox.driveY(), -0.45*xbox.driveX(), -0.45*xbox.rotate(), false, universalYaw);
         }
     }
 
