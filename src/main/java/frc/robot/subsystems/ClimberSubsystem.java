@@ -9,6 +9,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /** Add your docs here. */
@@ -29,9 +30,6 @@ public class ClimberSubsystem extends SubsystemBase {
 
     private double position = 0.0;
 
-    /**
-     * Initialize the climber motor with PID values in slot 0
-     */
     public ClimberSubsystem() {
         climberMotor = new TalonFX(CLIMBER_CAN_ID);
 
@@ -45,7 +43,7 @@ public class ClimberSubsystem extends SubsystemBase {
         config.MotionMagic.MotionMagicCruiseVelocity = MAX_VELOCITY;
         config.MotionMagic.MotionMagicAcceleration = MAX_ACCELERATION;
 
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         config.CurrentLimits.SupplyCurrentLimit = 40;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -62,10 +60,14 @@ public class ClimberSubsystem extends SubsystemBase {
         climberMotor.setControl(positionRequest.withPosition(position));
     }
 
-    public Command backCommand() {
+    public Command climbCommand() {
         return runOnce(() -> {
-            climb(320.0);
-        });
+                    climb(200.0);
+                })
+                .andThen(Commands.waitSeconds(3))
+                .andThen(run(() -> {
+                    climb(-100.0);
+                }));
     }
 
     public Command neutralCommand() {
@@ -74,17 +76,17 @@ public class ClimberSubsystem extends SubsystemBase {
         });
     }
 
-    // public Command slightFCommand() {
-    //     return runOnce(() -> {
-    //         climb(getPosition() + 20.0);
-    //     });
-    // }
+    public Command slightFCommand() {
+        return runOnce(() -> {
+            climb(getPosition() + 20.0);
+        });
+    }
 
-    // public Command slightBCommand() {
-    //     return runOnce(() -> {
-    //         climb(getPosition() - 20.0);
-    //     });
-    // }
+    public Command slightBCommand() {
+        return runOnce(() -> {
+            climb(getPosition() - 20.0);
+        });
+    }
 
     // Emergency stop
     public Command stopClimberCommand() {
