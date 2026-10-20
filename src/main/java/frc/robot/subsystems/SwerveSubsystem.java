@@ -26,7 +26,7 @@ import swervelib.parser.SwerveParser;
 public class SwerveSubsystem extends SubsystemBase {
     private SwerveDrive swerveDrive;
     private boolean align = false;
-    private boolean allianceBoolean = true; // TRUE = RED, FALSE = BLUE
+    private boolean allianceBoolean = false; // TRUE = RED, FALSE = BLUE
 
     private final Translation2d redHub = new Translation2d(Units.inchesToMeters(469.11), Units.inchesToMeters(158.85));
     private final Translation2d blueHub = new Translation2d(Units.inchesToMeters(182.11), Units.inchesToMeters(158.85));
@@ -50,8 +50,8 @@ public class SwerveSubsystem extends SubsystemBase {
                     // optionally outputs individual module feedforwards
                     new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller
                             // for holonomic drive trains
-                            new PIDConstants(0.006, 0.0, 0.002), // Translation PID constants
-                            new PIDConstants(0.03, 0.0, 0.002) // Rotation PID constants
+                            new PIDConstants(2, 0.0, 0.01), // Translation PID constants
+                            new PIDConstants(1, 0.0, 0.01) // Rotation PID constants
                             ),
                     config, // The robot configuration
                     () -> {
@@ -65,6 +65,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     },
                     this // Reference to this subsystem to set requirements
                     );
+            // swerveDrive.setMotorIdleMode(true);
         } catch (Exception e) {
             // Handle exception as needed
             e.printStackTrace();
@@ -122,6 +123,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public void drive(double translationX, double translationY, double rotation, boolean fieldRelative) {
         Logger.recordOutput("Align", this.align);
         if (!this.align) {
+            // Drive in the field XY coordinate system
             swerveDrive.drive(
                     new Translation2d(
                             translationX * swerveDrive.getMaximumChassisVelocity(),
@@ -130,6 +132,8 @@ public class SwerveSubsystem extends SubsystemBase {
                     fieldRelative,
                     false);
         } else {
+            // Drive in a polar coordinate system with the origin as the hub
+            // We need to pick the right hub based on our alliance
             Pose2d pose = getPose();
             double angle;
             double driveDirect;
@@ -144,6 +148,11 @@ public class SwerveSubsystem extends SubsystemBase {
                         (pose.getTranslation().getY() - blueHub.getY()),
                         (blueHub.getX() - pose.getTranslation().getX()));
             }
+            // Convert from the polar space to the field XY space since swerve works with the XY space
+            // To get the X and Y inputs we multiply the polar vector by a matrix:
+            // [  Cos(theta) , Sin(theta) ] * [Movement To/From Hub]
+            // [ -Sin(theta) , Cos(theta) ]   [Rotation Around Hub]
+            // For the rotation we attempt to face the hub by moving to reduce the difference between the pose and hub direction angle
             swerveDrive.drive(
                     new Translation2d(
                             driveDirect
@@ -204,6 +213,22 @@ public class SwerveSubsystem extends SubsystemBase {
         allianceBoolean = alliance;
     }
 
+    public Command autoAlignCommand() {
+        return this.runOnce(() -> {
+                    align = true;
+                })
+                .andThen(this.run(() -> {
+                            drive(0, 0, 0, true);
+                        })
+                        .withTimeout(1));
+    }
+
+    public Command unalignCommand() {
+        return this.runOnce(() -> {
+            align = false;
+        });
+    }
+
     public ChassisSpeeds getRobotVelocity() {
         return swerveDrive.getRobotVelocity();
     }
@@ -231,6 +256,16 @@ public class SwerveSubsystem extends SubsystemBase {
     public boolean getAlign() {
         return align;
     }
+
+    public void lock() {
+        swerveDrive.lockPose();
+    }
+
+    // public Command lockCommand() {
+    //     return run(() -> {
+    //         swerveDrive.lockPose();
+    //     });
+    // }
 
     // public Command distanceTestCommand(){
     //     return alignCommand()

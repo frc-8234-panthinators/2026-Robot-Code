@@ -5,9 +5,27 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Hub-Tower"
+            "name": "BackClimber"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoAlign"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.3
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Unalign"
           }
         },
         {
@@ -27,11 +45,17 @@
           "data": {
             "name": "StopShooter"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GoToClimb"
+          }
         }
       ]
     }
   },
-  "resetOdom": true,
+  "resetOdom": false,
   "folder": null,
   "choreoAuto": false
 }
