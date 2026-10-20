@@ -28,7 +28,7 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class VisionSubsystem extends SubsystemBase {
-    // PhotonCamera leftCam;
+    // PhotonCamera, make sure it is in april tag mode with 3D processing mode
     private final PhotonCamera rightCam;
     // PhotonPoseEstimator leftCamEstimator;
     private final PhotonPoseEstimator rightCamEstimator;

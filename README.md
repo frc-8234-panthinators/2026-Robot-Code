@@ -73,3 +73,8 @@ T  |             |
 +  |             |
 Y  └-------------┘
 ```
+
+
+#### Photonvision
+
+Go to http://photonvision.local:5800/#/dashboard to configure the orange pi settings
