@@ -28,7 +28,7 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class VisionSubsystem extends SubsystemBase {
-    // PhotonCamera, make sure it is in april tag mode with 3D processing mode
+    // PhotonCamera leftCam;
     private final PhotonCamera rightCam;
     // PhotonPoseEstimator leftCamEstimator;
     private final PhotonPoseEstimator rightCamEstimator;
@@ -43,9 +43,6 @@ public class VisionSubsystem extends SubsystemBase {
 
     private AprilTagFieldLayout tags;
 
-    /**
-     * Initialize photon vision wiht a single camera and this year's april tags
-     */
     public VisionSubsystem() {
         // leftCam = new PhotonCamera("leftCam");
         rightCam = new PhotonCamera("rightCam");
@@ -130,17 +127,13 @@ public class VisionSubsystem extends SubsystemBase {
     //     return leftCamEstimator.estimateCoprocMultiTagPose(result);
     // }
 
-    /**
-     * Update vision from the list of visible tags
-     */
     public void periodic(SwerveSubsystem swerve) {
         var results = rightCam.getAllUnreadResults();
         for (PhotonPipelineResult result : results) {
             List<PhotonTrackedTarget> targets = result.getTargets();
             List<PhotonTrackedTarget> newTargets = new ArrayList<PhotonTrackedTarget>();
             for (PhotonTrackedTarget target : targets) {
-                // Only pay attention to some of the tags. We skip the ones that are out of position during field setup
-                // as they really confuse the pose estimation when they are out of place
+                //
                 if ((target.getFiducialId() == 2)
                         || (target.getFiducialId() == 3)
                         || (target.getFiducialId() == 4)
@@ -149,10 +142,6 @@ public class VisionSubsystem extends SubsystemBase {
                         || (target.getFiducialId() == 9)
                         || (target.getFiducialId() == 10)
                         || (target.getFiducialId() == 11)
-                        || (target.getFiducialId() == 13)
-                        || (target.getFiducialId() == 14)
-                        || (target.getFiducialId() == 15)
-                        || (target.getFiducialId() == 16)
                         || (target.getFiducialId() == 18)
                         || (target.getFiducialId() == 19)
                         || (target.getFiducialId() == 20)
@@ -160,11 +149,7 @@ public class VisionSubsystem extends SubsystemBase {
                         || (target.getFiducialId() == 24)
                         || (target.getFiducialId() == 25)
                         || (target.getFiducialId() == 26)
-                        || (target.getFiducialId() == 27)
-                        || (target.getFiducialId() == 29)
-                        || (target.getFiducialId() == 30)
-                        || (target.getFiducialId() == 31)
-                        || (target.getFiducialId() == 32)) {
+                        || (target.getFiducialId() == 27)) {
                     newTargets.add(target);
                 }
             }

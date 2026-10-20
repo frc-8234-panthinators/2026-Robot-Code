@@ -6,14 +6,10 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.pathplanner.lib.commands.PathfindingCommand;
 import com.reduxrobotics.canand.CanandEventLoop;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
@@ -39,14 +35,11 @@ public class Robot extends LoggedRobot {
     private SwerveSubsystem swerve;
     private ShooterSubsystem shooter = new ShooterSubsystem();
     private XBoxContainer xbox = new XBoxContainer();
-    private PS5Container ps5 = new PS5Container();
     private VisionSubsystem vision = new VisionSubsystem();
     private Command m_autonomousCommand;
     private int allianceOffset = 1;
     private AddressableLED m_led;
     private AddressableLEDBuffer m_ledBuffer;
-    private final StringSubscriber nameSub;
-    private String autoString;
 
     private final LEDPattern m_rainbow = LEDPattern.rainbow(255, 255);
 
@@ -89,36 +82,20 @@ public class Robot extends LoggedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         swerve = new SwerveSubsystem();
-        m_robotContainer = new RobotContainer(swerve, vision, xbox, ps5);
+        m_robotContainer = new RobotContainer(swerve, vision, xbox);
         CanandEventLoop.getInstance();
 
         m_led = new AddressableLED(0);
 
-        // // Reuse buffer
-        // // Default to a length of 60, start empty output
-        // // Length is expensive to set, so only set it once, then just update data
+        // Reuse buffer
+        // Default to a length of 60, start empty output
+        // Length is expensive to set, so only set it once, then just update data
         m_ledBuffer = new AddressableLEDBuffer(32);
         m_led.setLength(m_ledBuffer.getLength());
 
-        // // Set the data
+        // Set the data
         m_led.setData(m_ledBuffer);
         m_led.start();
-
-        NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard/Auto Chooser");
-        nameSub = table.getStringTopic("active").subscribe("");
-
-        CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand());
-
-        var alliance = DriverStation.getAlliance();
-        boolean quickFixBool;
-        if (alliance.isPresent()) {
-            allianceOffset = (alliance.get() == DriverStation.Alliance.Red ? 1 : -1);
-            quickFixBool = (alliance.get() == DriverStation.Alliance.Red);
-        } else {
-            allianceOffset = -1;
-            quickFixBool = false;
-        }
-        swerve.quickFixAlliance(quickFixBool);
     }
 
     /**
@@ -141,7 +118,7 @@ public class Robot extends LoggedRobot {
             // Update the buffer with the rainbow animation
             m_scrollingRainbow.applyTo(m_ledBuffer);
         }
-        // // Set the LEDs
+        // Set the LEDs
         m_led.setData(m_ledBuffer);
         // Runs athe Scheduler.  This is responsible for polling buttons, adding newly-scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
@@ -151,26 +128,17 @@ public class Robot extends LoggedRobot {
 
         // Correct pose estimate with vision measurements
         vision.periodic(swerve);
-
         Logger.recordOutput("RobotPose", swerve.getPose());
         Logger.recordOutput("ShooterSpeeds", shooter.getSpeeds());
         Logger.recordOutput("DistanceFromHub", swerve.getDistanceFromHub());
         Logger.recordOutput("ShooterSetSpeed", shooter.getSetSpeed());
         Logger.recordOutput("allianceBoolean", swerve.getAllianceBoolean());
         Logger.recordOutput("EstimatedShooterSpeed", shooter.shootFunction(swerve.getDistanceFromHub()));
-
-        autoString = nameSub.get();
-        Logger.recordOutput("AutoNameFromTables", autoString); // DO NOT COMMENT OUT, NEEDED FOR AUTOS
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {
-        CommandScheduler.getInstance().schedule(shooter.stopCommand());
-        if (m_autonomousCommand != null) {
-            m_autonomousCommand.cancel();
-        }
-    }
+    public void disabledInit() {}
 
     @Override
     public void disabledPeriodic() {}
@@ -178,9 +146,6 @@ public class Robot extends LoggedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
-        CommandScheduler.getInstance().schedule(shooter.distShootCommand());
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand(autoString);
-        Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
         var alliance = DriverStation.getAlliance();
         boolean quickFixBool;
         if (alliance.isPresent()) {
@@ -191,6 +156,8 @@ public class Robot extends LoggedRobot {
             quickFixBool = false;
         }
         swerve.quickFixAlliance(quickFixBool);
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        Logger.recordOutput("AutoCommand", m_autonomousCommand == null);
 
         // schedule the autonomous command (example)
         if (m_autonomousCommand != null) {
@@ -205,7 +172,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
-        CommandScheduler.getInstance().schedule(shooter.manualShootCommand());
+        shooter.switchShootType();
         // This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
@@ -218,11 +185,7 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
-        if (DriverStation.isJoystickConnected(1)){
-            swerve.drive(allianceOffset * ps5.driveY(), allianceOffset * ps5.driveX(), -ps5.rotate(), true);
-        } else {
-            swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), true);
-        }
+        swerve.drive(allianceOffset * xbox.driveY(), allianceOffset * xbox.driveX(), -xbox.rotate(), true);
     }
 
     @Override
